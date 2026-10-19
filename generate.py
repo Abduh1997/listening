@@ -1,7 +1,7 @@
 import asyncio, glob, json, os, subprocess, edge_tts
 
 VOICES = {"A": "en-US-JennyNeural", "B": "en-US-GuyNeural"}
-RATE = "-2%"
+RATE = "-5%"
 PAUSE_SECONDS = 0.01
 VOLUME = "+0%"
 
