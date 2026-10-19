@@ -1,283 +1,365 @@
-A: Hello, everyone! Welcome to Easy English Talk.
-B: Hi, everyone! This is a slow and easy English podcast for beginners.
-A: My name is Anna.
-B: And my name is Ben.
-A: We are your English friends.
+A: Hello, hello, everyone! Welcome to Easy English Talk!
+A: I'm Anna, and I'm so happy you're here today.
+A: This is a slow and easy English podcast, just for beginners.
+A: So please, relax. There are no hard words here.
+
+B: Hi, everyone! I'm Ben, and I'm happy too!
 B: In every episode, we talk about one simple topic.
-A: We speak slowly and clearly.
-B: You can listen, read the words, and say them with us.
-A: Before we start, we have a small favor to ask.
-B: Please click the subscribe button.
-A: It is free, and it helps us a lot.
-B: Please click the bell too. Then you can see every new episode.
-A: If you like this video, please click the like button.
-B: And please write a comment. We read your comments, and we love them.
-A: Okay, are you ready for episode one?
-B: The title is, Hello! My Name Is...
+B: We speak slowly and clearly, so you can understand us.
+B: And you can listen, read the words on the screen, and say them with us.
+
+A: That's right! But before we start, we have one small favor to ask.
+A: If you like learning English with us, please click the subscribe button.
+A: It's free, and it really helps our little podcast.
+A: And please click the bell too, so you never miss a new episode.
+
+B: Yes, please! And if you like this video, click the like button too.
+B: Oh, and one more thing. Please write a comment under this video.
+B: We read every comment, and we love them!
+B: I'll give you a small task at the end, so stay with us.
+
+A: Okay, Ben, are you ready for episode one?
+A: The title today is, Hello! My Name Is...
 A: Today, we learn how to meet a new person in English.
-B: We learn how to say hello.
-A: We learn how to say our name.
-B: We learn where we are from.
-A: And we learn how to talk about our age and our job.
-B: That sounds like a lot, but don't worry. It is easy.
-A: We go step by step.
-B: I am ready. Are you ready, Anna?
-A: Yes, I am ready. Let's go!
-B: First, let's learn how to say hello.
-A: The easiest word is, hello.
-B: Hello!
-A: Hello!
-B: You can also say, hi. Hi is short and friendly.
-A: Hi, Ben!
-B: Hi, Anna!
-A: We can say hello and hi at any time of the day.
-B: But there are also special greetings.
-A: In the morning, we say, good morning.
-B: Good morning, Anna!
+A: We learn how to say hello, how to say our names, and where we are from.
+
+B: And we learn how to talk about our age and our job.
+B: It sounds like a lot, but don't worry. It's easy.
+B: We go step by step, and we repeat a lot.
+B: So, Anna, are you ready? Because I'm ready!
+
+A: I'm ready too! Let's go!
+A: Let's start with the easiest word in English. Hello!
+A: You can say hello to everyone, at any time of the day.
+A: You can also say, hi. Hi is short and very friendly.
+
+B: Hello, Anna! Hi!
+B: See? It's easy. We say hello to friends, to teachers, and to new people.
+B: But English also has special greetings for different times of the day.
+B: Do you want to try them with me, Anna?
+
+A: Of course! In the morning, we say, good morning.
+A: In the afternoon, we say, good afternoon.
+A: And in the evening, we say, good evening.
 A: Good morning, Ben!
-B: In the afternoon, we say, good afternoon.
-A: Good afternoon, Ben!
-B: Good afternoon, Anna!
-A: In the evening, we say, good evening.
-B: Good evening, everyone!
-A: And at the end of the day, we say, good night.
-B: Good night means goodbye at night.
-A: Now, how do we say goodbye?
-B: We can say, goodbye.
-A: Or we can say, bye.
-B: Or, see you later.
-A: Or, see you tomorrow.
-B: Bye, Anna! See you tomorrow!
-A: Bye, Ben! See you!
-B: Now we know how to say hello and goodbye.
-A: Let's say them again together. Hello. Hi. Good morning. Good afternoon.
-B: Good evening. Good night. Goodbye. See you later.
-A: Very good! Next, we ask a very common question.
-B: The question is, how are you?
-A: How are you?
-B: This question is very important in English.
-A: People ask it every day.
-B: How are you, Anna?
-A: I'm fine, thank you. And you?
-B: I'm fine, thank you.
-A: Now, let's learn more answers.
-B: We can say, I'm good.
-A: Or we can say, I'm great.
-B: Great means very good.
-A: I'm great today!
-B: We can also say, I'm okay.
-A: Okay is not good and not bad.
-B: What about a bad day?
-A: Then we can say, I'm tired.
-B: Tired means you need to sleep.
-A: Yes. I'm tired today.
-B: Or we can say, I'm hungry.
-A: Hungry means you want to eat.
-B: I'm hungry right now, Anna.
-A: Me too! It is almost lunch time.
-B: Let's practice. How are you, Anna?
-A: I'm great, thank you! How are you, Ben?
-B: I'm okay, thanks. A little tired.
-A: Oh, I'm sorry to hear that.
-B: It's okay. Thank you.
-A: Now you try. Say, how are you, out loud.
-B: Say it with a big smile!
-A: Very good! Now, let's talk about names.
-B: The question is, what is your name?
-A: What is your name?
-B: My name is Ben.
-A: We can also say it in a short way. I'm Ben.
-B: Yes. I'm Ben.
-A: I'm Anna.
-B: Both ways are correct.
-A: My name is Anna. I'm Anna.
-B: Now, a very polite sentence. Nice to meet you.
-A: Nice to meet you, Ben.
-B: Nice to meet you too, Anna.
-A: Let's say it slowly. Nice. To. Meet. You.
-B: Nice to meet you.
-A: And the answer is, nice to meet you too.
-B: Nice to meet you too.
-A: Sometimes people cannot hear our name well.
-B: So we spell our name.
-A: We say the letters one by one.
-B: The question is, how do you spell your name?
-A: My name is Anna. A, N, N, A.
-B: And my name is Ben. B, E, N.
-A: Let's try a longer name. Maria. M, A, R, I, A.
-B: Good. And now, Tom. T, O, M.
-A: Can you spell your name?
-B: Try it now. Say your name, and then spell it.
-A: Say the letters slowly.
-B: Great job!
-A: Now, let's talk about countries.
-B: A good question is, where are you from?
-A: Where are you from?
-B: I am from Australia.
-A: And I am from Canada.
-B: Australia and Canada are two countries.
-A: Our listeners are from many countries.
-B: Some of you are from Indonesia.
-A: Some of you are from Brazil.
-B: Some are from India.
-A: Some are from Mexico.
-B: And some are from Japan.
-A: So, where are you from, dear listener?
-B: Please tell us in the comments.
-A: We really want to know!
-B: We can also say the name of our city.
-A: I am from Toronto. Toronto is a city in Canada.
-B: I am from Sydney. Sydney is a city in Australia.
-A: Let's make a full sentence. I am from Toronto, Canada.
-B: I am from Sydney, Australia.
-A: We can also use a short form. I'm from Toronto.
-B: I'm from Sydney.
-A: Here is another question. Where do you live?
-B: I live in Sydney.
-A: And I live in Toronto.
-B: We use the word live for the place of your home.
-A: I live in a small house.
-B: I live in a big city.
-A: Let's practice. Hello, I'm Maria. I'm from Brazil.
-B: Hi, Maria! I'm Ben. Nice to meet you.
-A: Nice to meet you too, Ben. Where are you from?
-B: I'm from Australia.
-A: Great! Now it is your turn. Say, I'm from, and your country.
-B: Say it loudly and clearly.
-A: Very good! Next, we learn numbers.
-B: Numbers are useful for age, phone numbers, and prices.
-A: Let's count from one to ten.
-B: One, two, three, four, five.
-A: Six, seven, eight, nine, ten.
-B: Let's do it again. One, two, three, four, five.
-A: Six, seven, eight, nine, ten.
-B: Great! Now we can talk about age.
-A: The question is, how old are you?
-B: How old are you?
-A: I am twenty-eight years old.
-B: I am thirty years old.
-A: We can also say it in a short way. I'm twenty-eight.
-B: I'm thirty.
-A: Let's learn the big numbers too.
-B: Ten, twenty, thirty, forty, fifty.
-A: Sixty, seventy, eighty, ninety, one hundred.
-B: One more time. Ten, twenty, thirty, forty, fifty.
-A: Sixty, seventy, eighty, ninety, one hundred.
-B: Be careful. Some people do not like the age question.
-A: That's true. In some countries, it is not polite.
-B: So ask only your friends.
-A: Good tip. Let's practice.
-B: How old are you, Anna?
-A: I'm twenty-eight. How old are you, Ben?
-B: I'm thirty.
-A: Now you try. How old are you? Say your answer out loud.
-B: Wonderful! Now, let's talk about jobs.
-A: A job is the work that you do.
-B: The question is, what do you do?
-A: What do you do?
-B: It means, what is your job?
-A: I am a designer.
-B: I am a teacher.
-A: Let's learn some more jobs.
-B: A teacher works at a school.
-A: A doctor helps sick people.
-B: A nurse works with a doctor.
-A: A student learns at school or at university.
-B: A driver drives a car or a bus.
-A: A cook makes food.
-B: A farmer works with plants and animals.
-A: An engineer builds roads and machines.
-B: Did you hear that? We say, a teacher, but we say, an engineer.
-A: We use a before most words.
-B: We use an before the letters A, E, I, O, and U.
-A: So we say, a doctor, a driver, a cook.
-B: And we say, an engineer, an artist.
-A: Let's make sentences. I'm a designer.
-B: I'm a teacher.
-A: I'm a student.
-B: I'm a driver.
-A: I'm an engineer.
-B: What do you do, Anna?
-A: I'm a designer. I love my job.
-B: What do you do, Ben?
-A: Hmm, I think you are a teacher.
-B: Yes, I am a teacher. I love my job too.
-A: Now it is your turn. What do you do? Say it out loud.
-B: Very good! Now, let's talk about languages.
-A: Do you speak English?
-B: Yes, I do. I speak English.
-A: I speak English and a little French.
-B: A little means not much.
-A: Right. I speak a little French.
-B: I speak English and a little Spanish.
-A: Your English is very good, Ben.
-B: Thank you, Anna. Your English is very good too.
-A: And your English is good too, dear listener!
-B: You are learning English right now. That is great.
-A: Now, let's put everything together.
-B: We make a short conversation, like in real life.
-A: Imagine we meet at a party. We don't know each other.
-B: Okay. I'm ready.
-A: Hello! I'm Anna. What's your name?
-B: Hi, Anna! My name is Ben. Nice to meet you.
-A: Nice to meet you too, Ben. Where are you from?
-B: I'm from Australia. I live in Sydney. And you?
-A: I'm from Canada. I live in Toronto.
-B: Oh, nice! How old are you, Anna?
-A: I'm twenty-eight. And you?
-B: I'm thirty.
-A: What do you do, Ben?
-B: I'm a teacher. And you?
-A: I'm a designer. I love my job.
-B: That's great! Do you speak French?
-A: Yes, I speak a little French.
-B: Wonderful! It was nice to talk to you.
-A: It was nice to talk to you too. See you later!
-B: Bye, Anna!
-A: Bye, Ben!
-B: Let's do one more conversation, with new names.
-A: Okay. Now I am Maria, and I'm from Brazil.
-B: And I am Tom. I'm from India.
-A: Hello, I'm Maria. What's your name?
-B: Hi, Maria. I'm Tom. Nice to meet you.
-A: Nice to meet you too, Tom. How are you?
-B: I'm great, thank you. And you?
-A: I'm fine, thanks. How old are you, Tom?
-B: I'm twenty-five. And you, Maria?
-A: I'm twenty-two. I'm a student.
-B: I'm a driver. I drive a bus.
-A: That's interesting! Do you speak English?
-B: Yes, I do. I speak English and Hindi.
-A: Wonderful! See you later, Tom.
-B: Bye, Maria! See you tomorrow!
-A: Great job, everyone! Now, let's review.
-B: Let's say the key sentences again.
-A: Hello, my name is Anna.
-B: Nice to meet you.
-A: I'm from Canada.
-B: I'm thirty years old.
-A: I'm a teacher.
-B: I speak English and a little Spanish.
-A: How are you?
+
+B: Good morning, Anna! Good afternoon! Good evening!
+B: I'm saying all of them, because I'm so happy today.
+B: Now, what about the end of the day? Before we go to bed, we say, good night.
+B: Good night means goodbye at night. Don't say it in the morning!
+
+A: That would be funny! Good night in the morning.
+A: Okay, so how do we say goodbye? The simple way is, goodbye.
+A: Or you can say, bye. Bye is shorter.
+A: And we can also say, see you later, or, see you tomorrow.
+
+B: See you tomorrow is my favorite!
+B: Let's say all the greetings again, slowly. Hello. Hi. Good morning.
+B: Good afternoon. Good evening. Good night.
+B: Goodbye. Bye. See you later. Great! You're doing very well!
+
+A: Now, let's learn the most common question in English.
+A: It is, how are you?
+A: People ask this question every day, at school, at work, and with friends.
+A: So it's very important. How are you, Ben?
+
 B: I'm fine, thank you. And you?
-A: What is your name?
-B: Where are you from?
-A: How old are you?
-B: What do you do?
-A: You can say these sentences every day.
-B: Say them to your friends, or say them to a mirror.
-A: Now, we have a small challenge for you.
-B: Please write a comment under this video.
+B: See, that was a full answer. I'm fine, thank you. And you?
+B: The last part, and you, is very useful.
+B: It means, I ask you the same question.
+
+A: I'm great, thank you! Great means very good.
+A: But we have more answers too. You can say, I'm good, or, I'm okay.
+A: Okay means not good and not bad, just normal.
+A: And you can say, I'm great today!
+
+B: What about a bad day, Anna? Maybe you're not so happy.
+B: Then you can say, I'm tired. Tired means you need to sleep.
+B: Or you can say, I'm hungry. Hungry means you want to eat.
+B: And right now, I'm a little hungry!
+
+A: Me too! It's almost lunch time!
+A: Let's practice. I'll ask first. How are you, Ben?
+
+B: I'm okay, thanks. I'm a little tired today. And you?
+B: Now it's your turn, dear listener. Answer the question out loud.
+B: How are you today? Say it with a big smile!
+
+A: That was great! Your English is getting better already.
+A: Okay, next, let's talk about names. This one is very important.
+A: When you meet a new person, you want to know their name, right?
+A: The question is, what is your name? What is your name, Ben?
+
+B: My name is Ben.
+B: There is also a short way. You can say, I'm Ben.
+B: Both ways are correct. My name is Ben, or, I'm Ben.
+B: And you, Anna? What's your name?
+
+A: My name is Anna. Or, I'm Anna.
+A: And now, a very polite sentence. Nice to meet you!
+A: Let's say it slowly. Nice. To. Meet. You.
+A: Nice to meet you, Ben!
+
+B: Nice to meet you, too, Anna!
+B: Do you see the little word, too? It means, me also.
+B: So the answer to, nice to meet you, is, nice to meet you too.
+B: You can use it every time you meet someone new.
+
+A: Sometimes, people cannot hear your name well. Maybe the place is noisy.
+A: Or maybe your name is long or unusual.
+A: In that case, we spell the name. We say the letters one by one.
+A: The question is, how do you spell your name?
+
+B: My name is Ben. B, E, N.
+B: Easy, because my name is short!
+B: Anna, can you spell your name?
+
+A: Sure! A, N, N, A.
+A: Let's try a longer name. Maria. M, A, R, I, A.
+A: And another one. Tom. T, O, M.
+A: Now it's your turn. Say your name, and then spell it slowly.
+
+B: Take your time. There's no rush.
+B: If you want, say the letters again and again.
+B: This is a very useful skill, especially on the phone.
+B: Great job, everyone!
+
+A: Now, let's talk about countries. A very common question is, where are you from?
+A: I'm from Canada. I'm from a city called Toronto.
+A: Where are you from, Ben?
+
+B: I'm from Australia. I'm from a city called Sydney.
+B: See the pattern? I'm from, and then the country.
+B: Our listeners are from many different countries.
+B: Some of you are from Indonesia, and some are from Brazil.
+
+A: Some are from India, some are from Mexico, and some are from Japan.
+A: It's wonderful! English connects all of us.
+A: So, dear listener, where are you from?
+A: Please tell us in the comments. We really want to know!
+
+B: Yes, tell us your country and your city.
+B: We can say it like this. I'm from Toronto, Canada.
+B: Or, I'm from Sydney, Australia. First the city, then the country.
+B: It sounds very clear and natural.
+
+A: There's another useful question. Where do you live?
+A: Maybe you live in a different place from your home country.
+A: I live in Toronto. I live in a small house with a garden.
+A: Where do you live, Ben?
+
+B: I live in Sydney, in a big city near the sea.
+B: We use the word live for the place of your home.
+B: So, I'm from Australia, and I live in Sydney.
+B: Anna, can we try a short example?
+
+A: Sure! Hello, I'm Anna. I'm from Canada. Where are you from?
+
+B: Hi, Anna! I'm Ben. I'm from Australia. Nice to meet you!
+
+A: Nice to meet you too, Ben!
+A: Now, dear listener, it's your turn. Say, I'm from, and then your country.
+A: Say it loudly and clearly. Don't be shy!
+
+B: Good job! Now it's time for numbers.
+B: Numbers are very useful. We use them for age, for phone numbers, and for prices.
+B: Let's count from one to ten together. One, two, three, four, five.
+B: Six, seven, eight, nine, ten.
+
+A: Let's do it one more time. One, two, three, four, five.
+A: Six, seven, eight, nine, ten.
+A: Great! Now we can talk about age.
+A: The question is, how old are you?
+
+B: How old are you? I'm thirty years old.
+B: We can also say it in a short way. I'm thirty.
+B: How old are you, Anna?
+
+A: I'm twenty-eight. Twenty-eight years old.
+A: Let's learn some bigger numbers too.
+A: Ten, twenty, thirty, forty, fifty.
+A: Sixty, seventy, eighty, ninety, one hundred.
+
+B: One more time, very slowly. Ten, twenty, thirty, forty, fifty.
+B: Sixty, seventy, eighty, ninety, one hundred.
+B: Excellent! Now, here's a small tip.
+B: In some countries, asking about age is not polite.
+
+A: That's true, Ben. Some people don't like this question.
+A: So, ask about age only with friends, or when it's really useful.
+A: And you don't have to answer, if you don't want to.
+A: But it's good to know the sentence, right?
+
+B: Of course! Let's practice one more time. How old are you, Anna?
+
+A: I'm twenty-eight years old. And you, Ben?
+
+B: I'm thirty years old. Now, dear listener, it's your turn.
+B: How old are you? Say your answer out loud.
+
+A: Wonderful! Now let's talk about jobs.
+A: A job is the work that you do every day.
+A: The question is, what do you do?
+A: It means, what is your job?
+
+B: I'm a teacher. I teach English, and I love it.
+B: And you, Anna? What do you do?
+
+A: I'm a designer. I make nice pictures and posters.
+A: I love my job too.
+A: Let's learn some more jobs, so you can talk about yourself.
+A: A teacher works at a school. A doctor helps sick people.
+
+B: A nurse works with a doctor in a hospital.
+B: A student learns at school or at university.
+B: A driver drives a car, a taxi, or a bus.
+B: And a cook makes food in a kitchen. Yummy!
+
+A: A farmer works with plants and animals.
+A: An engineer builds roads, bridges, and machines.
+A: A shop assistant works in a shop and helps customers.
+A: There are so many jobs in the world!
+
+B: Wait, Anna. Did you hear something?
+B: We say, a teacher, a doctor, a driver. But we say, an engineer!
+B: Why? Because we use a before most words, but we use an before the letters A, E, I, O, and U.
+B: So we say, an engineer, an artist, and an office worker.
+
+A: Nice tip, Ben! Let's make some sentences.
+A: I'm a designer. I'm a student. I'm a driver.
+A: I'm an engineer. I'm a cook.
+A: Use the same pattern. I'm, and then a, or an, and then your job.
+
+B: Now it's your turn. What do you do?
+B: Maybe you're a student, or a nurse, or a farmer.
+B: Say it out loud. I'm a, or, I'm an, and then your job.
+B: Don't forget to smile!
+
+A: Great! There's one more thing. Let's talk about languages.
+A: A good question is, do you speak English?
+A: You can answer, yes, I do. Or, I speak a little English.
+A: A little means not much.
+
+B: I speak English, and I speak a little Spanish.
+B: What about you, Anna? What languages do you speak?
+
+A: I speak English and a little French.
+A: But my French is not perfect. I'm still learning!
+A: And hey, you're learning English right now. That's great!
+A: Everyone starts at the beginning. Don't give up!
+
+B: That's so true! Okay, now let's put everything together.
+B: We'll have a short conversation, just like in real life.
+B: Imagine we're at a party, and we don't know each other.
+B: Anna, you start.
+
+A: Hello! I'm Anna. What's your name?
+
+B: Hi, Anna! My name is Ben. Nice to meet you.
+
+A: Nice to meet you too, Ben. Where are you from?
+
+B: I'm from Australia. I live in Sydney. And you?
+
+A: I'm from Canada. I live in Toronto.
+
+B: Oh, nice! How old are you, Anna?
+
+A: I'm twenty-eight. And you?
+
+B: I'm thirty. What do you do?
+
+A: I'm a designer. I love my job. And you?
+
+B: I'm a teacher. Do you speak French?
+
+A: Yes, I speak a little French. Do you speak Spanish?
+
+B: Yes, a little! It was nice to talk to you, Anna.
+
+A: It was nice to talk to you too, Ben. See you later!
+
+B: Bye, Anna!
+
+A: Bye, Ben!
+
+B: Wow, that was a real conversation!
+B: Did you hear all the sentences? Hello, I'm Ben. Nice to meet you. Where are you from?
+B: I'm from Australia. I'm thirty. I'm a teacher.
+B: You can use all of them the next time you meet someone.
+
+A: Yes! Let's listen to one more conversation, with new names.
+A: This time, I'm Maria, and I'm from Brazil.
+A: And you're Tom, from India. Ready?
+
+B: Ready! Let's go!
+
+A: Hi! I'm Maria. What's your name?
+
+B: Hi, Maria! I'm Tom. Nice to meet you.
+
+A: Nice to meet you too, Tom. How are you?
+
+B: I'm great, thank you! And you?
+
+A: I'm fine, thanks. Where are you from?
+
+B: I'm from India. I live in Delhi. And you?
+
+A: I'm from Brazil. I'm twenty-two. I'm a student.
+
+B: I'm twenty-five. I'm a driver. I drive a bus.
+
+A: That's interesting! Do you speak English?
+
+B: Yes, I do. I speak English and Hindi.
+
+A: Wonderful! It was nice to meet you, Tom.
+
+B: Nice to meet you too, Maria. See you tomorrow!
+
+A: Bye, Tom!
+
+B: Bye, Maria!
+
+A: Great job, everyone! Now, let's review the main sentences.
+A: To say hello, you can say, hello, or, hi, or, good morning.
+A: To ask about feelings, say, how are you? And answer, I'm fine, thank you. And you?
+A: To say your name, say, my name is, or, I'm, and then your name.
+
+B: Then say, nice to meet you.
+B: To say where you're from, say, I'm from, and then your country.
+B: For age, say, I'm, and then your number, and, years old.
+B: For your job, say, I'm a, or, I'm an, and then your job.
+
+A: And for languages, say, I speak English and a little, and then your language.
+A: Do you remember all of these? It's okay if not.
+A: Listen to this episode again, and again.
+A: Repeating is the best way to learn!
+
+B: Yes! Here's a good plan. First, listen without reading.
+B: Then, listen again and read the words on the screen.
+B: Finally, listen a third time, and speak along with us.
+B: You'll be surprised how fast you improve.
+
+A: And now, here's your challenge, dear listener.
+A: Please write a comment under this video.
 A: Write your name, your country, and your job.
-B: For example, Hello, my name is Sara. I'm from Indonesia. I'm a student.
-A: Don't be shy. Everyone is learning.
-B: We will read your comments, and we will answer some of them.
-A: That is the end of episode one.
-B: Thank you for listening to Easy English Talk.
-A: If you like this episode, please click the like button.
+A: For example, Hello, my name is Sara. I'm from Indonesia. I'm a student.
+
+B: Don't be shy! Everyone here is learning, just like you.
+B: We read your comments, and we answer some of them.
+B: And if you like this episode, please click the like button.
 B: Please subscribe, and click the bell, so you don't miss the next episode.
+
+A: That's the end of episode one.
+A: Thank you so much for listening to Easy English Talk.
 A: In the next episode, we talk about family and friends.
-B: The title is, My Family and Friends.
-A: See you in the next episode!
+A: The title is, My Family and Friends.
+
+B: It's going to be fun!
+B: Thank you for learning with us today.
+B: Take care, and keep practicing every day.
 B: Goodbye, everyone!
-A: Bye bye!
+
+A: Bye bye, see you in the next episode!
