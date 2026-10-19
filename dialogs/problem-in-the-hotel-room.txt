@@ -1,0 +1,20 @@
+A: Front desk, good evening. How can I help you?
+B: Hello. This is room four oh two. The air conditioner is not working.
+A: I'm very sorry about that. Is it making any noise?
+B: No, it just doesn't turn on at all.
+A: I understand. Let me send someone to check it right away.
+B: Thank you. How long will it take?
+A: Our technician can be there in ten minutes.
+B: Okay. Also, there is no hot water in the bathroom.
+A: Oh, I apologize for the inconvenience.
+B: It's fine, but I would like to solve both problems tonight.
+A: Of course. If we cannot fix them, we will move you to another room.
+B: That sounds fair. Is there a room with a nice view?
+A: Yes, we have a room on the eighth floor with a city view.
+B: That would be wonderful. Is it available now?
+A: Yes, it is. I will prepare the key card for you.
+B: Great. Should I come down to the lobby?
+A: No need. Our staff will bring it to your room.
+B: Thank you very much for your help.
+A: It's our pleasure. Again, we are sorry for the trouble.
+B: No problem. Have a good night.
