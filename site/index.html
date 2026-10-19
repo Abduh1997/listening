@@ -12,7 +12,8 @@
   button:disabled { opacity: .5; cursor: wait; }
   input[type=text] { width: 100%; padding: 8px; margin: 6px 0; box-sizing: border-box; border: 1px solid #ccc; border-radius: 8px; }
   .line { margin: 6px 0; }
-  .A { color: #be185d; } .B { color: #1d4ed8; }
+  .A { color: #be185d; }
+  .B { color: #1d4ed8; }
   .hidden { display: none; }
   .video-box { margin-top: 12px; padding-top: 12px; border-top: 1px solid #eee; }
   .video-box video { width: 100%; max-width: 270px; display: block; margin-top: 8px; border-radius: 8px; }
@@ -28,8 +29,7 @@
 const W = 720, H = 1280;
 
 function pickMime() {
-  const c = ["video/mp4;codecs=avc1,mp4a.40.2", "video/mp4",
-             "video/webm;codecs=vp9,opus", "video/webm"];
+  const c = ["video/webm;codecs=vp8,opus", "video/webm", "video/webm;codecs=vp9,opus"];
   return c.find(t => window.MediaRecorder && MediaRecorder.isTypeSupported(t)) || "";
 }
 
@@ -45,56 +45,50 @@ function wrap(ctx, text, maxW) {
   return rows;
 }
 
-function drawCover(ctx, img) {
-  const s = Math.max(W / img.width, H / img.height);
-  const w = img.width * s, h = img.height * s;
-  ctx.drawImage(img, (W - w) / 2, (H - h) / 2, w, h);
+// Foto dikecilkan sekali saja ke 720x1280 + lapisan gelap (hemat memori)
+async function loadBackground(file) {
+  const bmp = await createImageBitmap(file);
+  const bg = document.createElement("canvas");
+  bg.width = W; bg.height = H;
+  const c = bg.getContext("2d");
+  const s = Math.max(W / bmp.width, H / bmp.height);
+  const w = bmp.width * s, h = bmp.height * s;
+  c.drawImage(bmp, (W - w) / 2, (H - h) / 2, w, h);
+  c.fillStyle = "rgba(0,0,0,0.5)";
+  c.fillRect(0, 0, W, H);
+  bmp.close();
+  return bg;
 }
 
-function loadImage(file) {
-  return new Promise((res, rej) => {
-    const img = new Image();
-    img.onload = () => res(img);
-    img.onerror = rej;
-    img.src = URL.createObjectURL(file);
-  });
-}
+async function makeVideo(d, file, title, onStatus, previewBox) {
+  const bg = await loadBackground(file);
 
-async function makeVideo(d, file, title, onStatus) {
-  const img = await loadImage(file);
   const canvas = document.createElement("canvas");
   canvas.width = W; canvas.height = H;
+  canvas.style.cssText = "width:100%;max-width:270px;display:block;margin-top:8px;border-radius:8px;";
+  previewBox.textContent = "";
+  previewBox.appendChild(canvas);
   const ctx = canvas.getContext("2d");
 
   const audio = new Audio(d.audio);
-  const ac = new AudioContext();
-  await ac.resume();
-  const src = ac.createMediaElementSource(audio);
-  const dest = ac.createMediaStreamDestination();
-  src.connect(dest);
+  audio.preload = "auto";
+  await new Promise((res, rej) => {
+    audio.oncanplaythrough = res;
+    audio.onerror = () => rej(new Error("Audio gagal dimuat"));
+    audio.load();
+  });
+  const total = d.total || audio.duration;
 
-  const stream = new MediaStream([
-    ...canvas.captureStream(30).getVideoTracks(),
-    ...dest.stream.getAudioTracks()
-  ]);
-  const mime = pickMime();
-  const rec = new MediaRecorder(stream, mime ? { mimeType: mime, videoBitsPerSecond: 4000000 } : {});
-  const chunks = [];
-  rec.ondataavailable = e => e.data.size && chunks.push(e.data);
+  ctx.font = "bold 44px system-ui, sans-serif";
+  const titleRows = wrap(ctx, title, W - 100);
 
-  const done = new Promise(res => { rec.onstop = res; });
-  const total = d.total || d.lines[d.lines.length - 1].end;
-
-  function frame() {
-    const t = audio.currentTime;
-    drawCover(ctx, img);
-    ctx.fillStyle = "rgba(0,0,0,0.5)";
-    ctx.fillRect(0, 0, W, H);
-
+  function draw(t) {
+    ctx.drawImage(bg, 0, 0);
     ctx.textAlign = "center";
+
     ctx.fillStyle = "#fde047";
     ctx.font = "bold 44px system-ui, sans-serif";
-    wrap(ctx, title, W - 100).forEach((r, i) => ctx.fillText(r, W / 2, 130 + i * 56));
+    titleRows.forEach((r, i) => ctx.fillText(r, W / 2, 130 + i * 56));
 
     let cur = null;
     for (const l of d.lines) if (l.start <= t) cur = l;
@@ -102,36 +96,75 @@ async function makeVideo(d, file, title, onStatus) {
       ctx.fillStyle = cur.speaker === "A" ? "#f9a8d4" : "#93c5fd";
       ctx.font = "bold 30px system-ui, sans-serif";
       ctx.fillText(cur.speaker === "A" ? "Speaker 1" : "Speaker 2", W / 2, H / 2 - 150);
-      ctx.fillStyle = "#ffffff";
+
       ctx.font = "bold 54px system-ui, sans-serif";
       const rows = wrap(ctx, cur.text, W - 100);
       const y0 = H / 2 - ((rows.length - 1) * 33);
-      ctx.shadowColor = "rgba(0,0,0,.8)"; ctx.shadowBlur = 8;
-      rows.forEach((r, i) => ctx.fillText(r, W / 2, y0 + i * 66));
-      ctx.shadowBlur = 0;
+      ctx.lineWidth = 8;
+      ctx.lineJoin = "round";
+      ctx.strokeStyle = "rgba(0,0,0,.85)";
+      ctx.fillStyle = "#ffffff";
+      rows.forEach((r, i) => {
+        ctx.strokeText(r, W / 2, y0 + i * 66);
+        ctx.fillText(r, W / 2, y0 + i * 66);
+      });
     }
 
     ctx.fillStyle = "rgba(255,255,255,.3)";
     ctx.fillRect(60, H - 120, W - 120, 8);
     ctx.fillStyle = "#fde047";
     ctx.fillRect(60, H - 120, (W - 120) * Math.min(t / total, 1), 8);
-
-    onStatus("Merekam... " + Math.round(Math.min(t / total, 1) * 100) + "%");
-    if (!audio.ended) requestAnimationFrame(frame);
   }
 
-  rec.start(500);
+  draw(0);
+
+  const ac = new AudioContext();
+  await ac.resume();
+  const src = ac.createMediaElementSource(audio);
+  const dest = ac.createMediaStreamDestination();
+  src.connect(dest);
+
+  const stream = new MediaStream([
+    ...canvas.captureStream(25).getVideoTracks(),
+    ...dest.stream.getAudioTracks()
+  ]);
+  const mime = pickMime();
+  const rec = new MediaRecorder(stream, mime ? { mimeType: mime, videoBitsPerSecond: 2500000 } : {});
+  const chunks = [];
+  rec.ondataavailable = e => { if (e.data && e.data.size) chunks.push(e.data); };
+  const stopped = new Promise(res => { rec.onstop = res; });
+
+  rec.start(1000);
   await audio.play();
-  frame();
-  await new Promise(r => { audio.onended = r; });
-  await new Promise(r => setTimeout(r, 400));
+
+  await new Promise(resolve => {
+    const started = performance.now();
+    const timer = setInterval(() => {
+      const t = audio.currentTime;
+      draw(t);
+      onStatus("Merekam... " + Math.round(Math.min(t / total, 1) * 100) + "% (jangan pindah tab)");
+      const timeout = (performance.now() - started) / 1000 > total + 8;
+      if (audio.ended || t >= total - 0.05 || timeout) {
+        clearInterval(timer);
+        resolve();
+      }
+    }, 40);
+  });
+
+  await new Promise(r => setTimeout(r, 600));
   rec.stop();
-  await done;
+  await stopped;
+  audio.pause();
   ac.close();
 
-  const type = rec.mimeType || "video/webm";
+  const type = (rec.mimeType || "video/webm").split(";")[0];
   const blob = new Blob(chunks, { type });
-  return { url: URL.createObjectURL(blob), ext: type.includes("mp4") ? "mp4" : "webm" };
+  if (blob.size < 20000) throw new Error("Rekaman kosong (" + blob.size + " byte). Coba browser lain.");
+  return {
+    url: URL.createObjectURL(blob),
+    ext: type.includes("mp4") ? "mp4" : "webm",
+    size: blob.size
+  };
 }
 
 fetch("dialogs.json").then(r => r.json()).then(items => {
@@ -140,8 +173,10 @@ fetch("dialogs.json").then(r => r.json()).then(items => {
   items.forEach(d => {
     const card = document.createElement("div");
     card.className = "card";
+
     const h = document.createElement("h2");
     h.textContent = d.title;
+
     const audio = document.createElement("audio");
     audio.controls = true;
     audio.src = d.audio;
@@ -163,26 +198,35 @@ fetch("dialogs.json").then(r => r.json()).then(items => {
     vb.className = "video-box";
     const vh = document.createElement("strong");
     vh.textContent = "Buat video Shorts";
+
     const file = document.createElement("input");
-    file.type = "file"; file.accept = "image/*";
+    file.type = "file";
+    file.accept = "image/*";
+
     const title = document.createElement("input");
     title.type = "text";
     title.value = "Listening for Fluency | " + d.title;
+
     const gen = document.createElement("button");
     gen.textContent = "Generate video";
+
     const status = document.createElement("small");
     const result = document.createElement("div");
 
     gen.onclick = async () => {
       if (!file.files[0]) { status.textContent = "Pilih foto latar dulu."; return; }
-      gen.disabled = true; result.textContent = "";
+      gen.disabled = true;
       try {
-        const out = await makeVideo(d, file.files[0], title.value, s => status.textContent = s);
-        status.textContent = "Selesai.";
+        const out = await makeVideo(d, file.files[0], title.value,
+                                    s => status.textContent = s, result);
+        status.textContent = "Selesai. Ukuran: " + (out.size / 1048576).toFixed(1) + " MB";
+        result.textContent = "";
         const v = document.createElement("video");
-        v.src = out.url; v.controls = true;
+        v.src = out.url;
+        v.controls = true;
         const a = document.createElement("a");
-        a.className = "dl"; a.href = out.url;
+        a.className = "dl";
+        a.href = out.url;
         a.download = d.audio.replace("audio/", "").replace(".mp3", "") + "." + out.ext;
         a.textContent = "Download video (" + out.ext + ")";
         result.append(v, a);
@@ -194,12 +238,16 @@ fetch("dialogs.json").then(r => r.json()).then(items => {
 
     const note = document.createElement("div");
     note.innerHTML = "<small>Video direkam real-time, jadi durasinya sama dengan audio. Biarkan tab ini tetap terbuka selama proses.</small>";
-    vb.append(vh, document.createElement("br"), file, title, gen, document.createElement("br"), status, note, result);
+
+    vb.append(vh, document.createElement("br"), file, title, gen,
+              document.createElement("br"), status, note, result);
 
     card.append(h, audio, btn, tr, vb);
     list.appendChild(card);
   });
-}).catch(() => { document.getElementById("list").textContent = "No dialogs yet."; });
+}).catch(() => {
+  document.getElementById("list").textContent = "No dialogs yet.";
+});
 </script>
 </body>
 </html>
