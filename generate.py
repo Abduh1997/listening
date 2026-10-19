@@ -9,7 +9,8 @@ VOICES = {
 
 BASE_RATE = -2                 # persen, 0 = normal
 BASE_PITCH = {"A": 2, "B": 0}  # Hz, nada dasar (naik sedikit = lebih ceria)
-PAUSE_SECONDS = 0            # jeda dasar antar kalimat
+PAUSE_SECONDS = 0            # jeda saat pembicara berganti
+SAME_SPEAKER_PAUSE = 0      # jeda antar kalimat dari pembicara yang sama
 VOLUME = "+0%"
 VARIATION = 1.0                # 0 = datar, 1 = normal, 1.5 = lebih ekspresif
 
@@ -54,7 +55,9 @@ def voice_params(spk, text, rng):
     return f"{rate:+d}%", f"{pitch:+d}Hz"
 
 
-def pause_after(text, rng):
+def pause_after(text, same_next, rng):
+    if same_next:
+        return SAME_SPEAKER_PAUSE * (1 + rng.uniform(-0.2, 0.2) * VARIATION)
     t = text.strip()
     f = 1.0
     if t.endswith("?"):
@@ -101,13 +104,14 @@ async def main():
         rng = random.Random(name)  # variasi tetap sama setiap build
         lines, t = [], 0.0
         with open(f"site/audio/{name}.mp3", "wb") as out:
-            for spk, text in raw:
+            for i, (spk, text) in enumerate(raw):
+                same_next = i + 1 < len(raw) and raw[i + 1][0] == spk
                 rate, pitch = voice_params(spk, text, rng)
                 data = await synth(text, spk, rate, pitch)
                 with open("seg.mp3", "wb") as sf:
                     sf.write(data)
                 d = duration("seg.mp3")
-                sil, sd = get_silence(pause_after(text, rng))
+                sil, sd = get_silence(pause_after(text, same_next, rng))
                 lines.append({"speaker": spk, "text": text,
                               "start": round(t, 2), "end": round(t + d, 2)})
                 out.write(data)
