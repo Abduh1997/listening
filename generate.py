@@ -1,9 +1,24 @@
-import asyncio, glob, json, os, edge_tts
+import asyncio, glob, json, os, subprocess, edge_tts
 
 VOICES = {"A": "en-US-JennyNeural", "B": "en-US-GuyNeural"}
 
+RATE = "-25%"          # kecepatan: 0% normal, -20% agak pelan, -35% sangat pelan
+PAUSE_SECONDS = 0.8    # jeda antar kalimat (detik)
+VOLUME = "+0%"
+
+def make_silence(seconds):
+    # silence MP3 dengan format sama seperti edge-tts (24 kHz, mono, 48 kbps)
+    subprocess.run([
+        "ffmpeg", "-y", "-loglevel", "error",
+        "-f", "lavfi", "-i", "anullsrc=r=24000:cl=mono",
+        "-t", str(seconds), "-b:a", "48k", "silence.mp3"
+    ], check=True)
+    with open("silence.mp3", "rb") as f:
+        return f.read()
+
 async def main():
     os.makedirs("site/audio", exist_ok=True)
+    silence = make_silence(PAUSE_SECONDS)
     items = []
     for path in sorted(glob.glob("dialogs/*.txt")):
         name = os.path.splitext(os.path.basename(path))[0]
@@ -16,10 +31,11 @@ async def main():
                         lines.append((spk.strip(), text.strip()))
         with open(f"site/audio/{name}.mp3", "wb") as out:
             for spk, text in lines:
-                comm = edge_tts.Communicate(text, VOICES[spk])
+                comm = edge_tts.Communicate(text, VOICES[spk], rate=RATE, volume=VOLUME)
                 async for chunk in comm.stream():
                     if chunk["type"] == "audio":
                         out.write(chunk["data"])
+                out.write(silence)
         items.append({
             "title": name.replace("-", " ").title(),
             "audio": f"audio/{name}.mp3",
