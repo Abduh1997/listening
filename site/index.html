@@ -5,30 +5,68 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>English Listening</title>
 <style>
-  body { font-family: system-ui, sans-serif; max-width: 640px; margin: 0 auto; padding: 16px; background: #f6f7f9; color: #222; }
+  body { font-family: system-ui, sans-serif; max-width: 680px; margin: 0 auto; padding: 16px; background: #f6f7f9; color: #222; }
   .card { background: #fff; border-radius: 12px; padding: 16px; margin-bottom: 16px; box-shadow: 0 1px 4px rgba(0,0,0,.08); }
   audio { width: 100%; margin: 8px 0; }
   button { padding: 8px 14px; border: 0; border-radius: 8px; background: #2563eb; color: #fff; cursor: pointer; margin: 4px 4px 4px 0; }
+  button.gray { background: #64748b; }
   button:disabled { opacity: .5; cursor: wait; }
-  input[type=text] { width: 100%; padding: 8px; margin: 6px 0; box-sizing: border-box; border: 1px solid #ccc; border-radius: 8px; }
+  input[type=text], select { width: 100%; padding: 8px; margin: 6px 0; box-sizing: border-box; border: 1px solid #ccc; border-radius: 8px; font-size: 15px; }
+  label.pick { display: block; padding: 6px 0; }
   .line { margin: 6px 0; }
   .A { color: #be185d; }
   .B { color: #1d4ed8; }
   .hidden { display: none; }
-  .video-box { margin-top: 12px; padding-top: 12px; border-top: 1px solid #eee; }
-  .video-box video { width: 100%; max-width: 270px; display: block; margin-top: 8px; border-radius: 8px; }
+  .out video { width: 100%; max-width: 480px; display: block; margin-top: 8px; border-radius: 8px; }
+  .out canvas { width: 100%; max-width: 480px; display: block; margin-top: 8px; border-radius: 8px; }
   .dl { display: inline-block; padding: 8px 14px; background: #16a34a; color: #fff; border-radius: 8px; text-decoration: none; margin-top: 8px; }
   small { color: #666; }
+  h3 { margin: 14px 0 4px; }
 </style>
 </head>
 <body>
 <h1>English Listening</h1>
+
+<div class="card" id="maker">
+  <h2>Buat video</h2>
+
+  <h3>1. Format</h3>
+  <select id="fmt">
+    <option value="shorts">YouTube Shorts (vertikal 9:16, 720x1280)</option>
+    <option value="wide">YouTube video panjang (landscape 16:9, 1280x720)</option>
+  </select>
+
+  <h3>2. Foto latar</h3>
+  <input type="file" id="photo" accept="image/*">
+  <small>Pakai foto yang cocok dengan formatnya: vertikal untuk Shorts, mendatar untuk landscape.</small>
+
+  <h3>3. Judul video</h3>
+  <input type="text" id="vtitle" value="Listening for Fluency | English Conversation Practice">
+
+  <h3>4. Pilih dialog (boleh lebih dari satu)</h3>
+  <div id="picks">Loading...</div>
+  <button class="gray" id="selAll" type="button">Pilih semua</button>
+  <button class="gray" id="selNone" type="button">Kosongkan</button>
+  <div><small id="est">Perkiraan durasi: 0 detik</small></div>
+
+  <h3>5. Generate</h3>
+  <button id="gen" type="button">Generate video</button>
+  <div><small id="status"></small></div>
+  <div><small>Video direkam real-time, jadi durasinya sama dengan audio. Biarkan tab tetap terbuka dan layar menyala. Tiap generate memakai gaya animasi acak yang berbeda.</small></div>
+  <div class="out" id="out"></div>
+</div>
+
+<h2>Daftar dialog</h2>
 <div id="list">Loading...</div>
 
 <script>
-const W = 720, H = 1280;
-
 // ---------- format ----------
+const FORMATS = {
+  shorts: { W: 720, H: 1280, bps: 2500000, name: "shorts" },
+  wide:   { W: 1280, H: 720, bps: 3500000, name: "youtube" }
+};
+const GAP = 1.2; // jeda antar dialog saat digabung (detik)
+
 function pickMime() {
   const c = [
     "video/mp4;codecs=avc1.42E01E,mp4a.40.2",
@@ -72,8 +110,8 @@ function rr(ctx, x, y, w, h, r) {
   ctx.closePath();
 }
 
-// Foto dikecilkan sekali saja ke 720x1280 (hemat memori)
-async function loadBackground(file) {
+// Foto dikecilkan sekali saja ke ukuran video (hemat memori)
+async function loadBackground(file, W, H) {
   const bmp = await createImageBitmap(file);
   const bg = document.createElement("canvas");
   bg.width = W; bg.height = H;
@@ -93,11 +131,35 @@ const THEMES = [
   { accent: "#fcd34d", accent2: "#f87171", a: "#fb923c", b: "#14b8a6", tint: "rgba(40,15,5,.55)" },
   { accent: "#a3e635", accent2: "#22d3ee", a: "#e879f9", b: "#0ea5e9", tint: "rgba(5,25,15,.58)" }
 ];
-const LAYOUTS = {
-  side: { A: { x: 190, y: 470 }, B: { x: 530, y: 470 }, r: 88, subY: 830 },
-  wide: { A: { x: 175, y: 440 }, B: { x: 545, y: 440 }, r: 98, subY: 850 },
-  diag: { A: { x: 215, y: 410 }, B: { x: 505, y: 575 }, r: 80, subY: 890 }
-};
+
+function layoutsFor(W, H) {
+  if (W < H) {
+    return {
+      side: { A: { x: 190, y: 470 }, B: { x: 530, y: 470 }, r: 88, subY: 830 },
+      wide: { A: { x: 175, y: 440 }, B: { x: 545, y: 440 }, r: 98, subY: 850 },
+      diag: { A: { x: 215, y: 410 }, B: { x: 505, y: 575 }, r: 80, subY: 890 }
+    };
+  }
+  return {
+    side: { A: { x: 230, y: 250 }, B: { x: 1050, y: 250 }, r: 80, subY: 530 },
+    wide: { A: { x: 170, y: 260 }, B: { x: 1110, y: 260 }, r: 88, subY: 530 },
+    diag: { A: { x: 260, y: 225 }, B: { x: 1020, y: 285 }, r: 74, subY: 530 }
+  };
+}
+
+function metricsFor(W, H) {
+  if (W < H) {
+    return { titleY: 110, titleFont: 44, titleLine: 56, titleMaxW: W - 100,
+             subFont: 54, subLine: 66, subMaxW: W - 110,
+             vizY: 1030, barsBase: 1085, vizH: 110,
+             footerY: 1135, progY: 1185, progH: 8, portrait: true };
+  }
+  return { titleY: 55, titleFont: 36, titleLine: 44, titleMaxW: W - 200,
+           subFont: 46, subLine: 58, subMaxW: 1100,
+           vizY: 630, barsBase: 665, vizH: 60,
+           footerY: 100, progY: 700, progH: 6, portrait: false };
+}
+
 const FOOTERS = [
   "Listen  \u2022  Repeat  \u2022  Speak",
   "Train your ears every day",
@@ -123,7 +185,7 @@ function makeStyle(rnd) {
   });
   return {
     theme,
-    layout: pick(Object.keys(LAYOUTS)),
+    layout: pick(["side", "wide", "diag"]),
     swap: rnd() < 0.5,
     viz: pick(["bars", "mirror", "dots", "wave"]),
     particles: pick(["bubbles", "stars", "snow", "confetti"]),
@@ -143,7 +205,6 @@ function drawAvatar(ctx, cx, cy, r, av, mouth, blink, active, t) {
   ctx.save();
   ctx.globalAlpha = active ? 1 : 0.6;
 
-  // badan
   ctx.fillStyle = av.color;
   ctx.beginPath();
   ctx.ellipse(cx, cy + r * 1.35, r * 1.05, r * 0.6, 0, Math.PI, 0);
@@ -151,7 +212,6 @@ function drawAvatar(ctx, cx, cy, r, av, mouth, blink, active, t) {
 
   const hy = cy + (active ? Math.sin(t * 9) * 3 * mouth : 0);
 
-  // rambut belakang
   ctx.fillStyle = av.hair;
   if (av.style === "long") {
     ctx.beginPath();
@@ -159,13 +219,11 @@ function drawAvatar(ctx, cx, cy, r, av, mouth, blink, active, t) {
     ctx.fill();
   }
 
-  // wajah
   ctx.fillStyle = av.skin;
   ctx.beginPath();
   ctx.arc(cx, hy, r, 0, Math.PI * 2);
   ctx.fill();
 
-  // rambut depan
   ctx.fillStyle = av.hair;
   if (av.style !== "cap") {
     ctx.beginPath();
@@ -199,14 +257,12 @@ function drawAvatar(ctx, cx, cy, r, av, mouth, blink, active, t) {
     ctx.fill();
   }
 
-  // mata
   ctx.fillStyle = "#111827";
   const ey = hy + r * 0.05;
   const eh = Math.max(1.5, r * 0.09 * (1 - blink));
   ctx.beginPath(); ctx.ellipse(cx - r * 0.36, ey, r * 0.09, eh, 0, 0, Math.PI * 2); ctx.fill();
   ctx.beginPath(); ctx.ellipse(cx + r * 0.36, ey, r * 0.09, eh, 0, 0, Math.PI * 2); ctx.fill();
 
-  // kacamata
   if (av.glasses) {
     ctx.strokeStyle = "#111827";
     ctx.lineWidth = 4;
@@ -215,19 +271,16 @@ function drawAvatar(ctx, cx, cy, r, av, mouth, blink, active, t) {
     ctx.beginPath(); ctx.moveTo(cx - r * 0.14, ey); ctx.lineTo(cx + r * 0.14, ey); ctx.stroke();
   }
 
-  // pipi
   ctx.fillStyle = "rgba(244,114,182,.35)";
   ctx.beginPath(); ctx.arc(cx - r * 0.55, hy + r * 0.3, r * 0.14, 0, Math.PI * 2); ctx.fill();
   ctx.beginPath(); ctx.arc(cx + r * 0.55, hy + r * 0.3, r * 0.14, 0, Math.PI * 2); ctx.fill();
 
-  // mulut
   ctx.fillStyle = "#7f1d1d";
   ctx.beginPath();
   ctx.ellipse(cx, hy + r * 0.48, r * 0.2 + mouth * r * 0.06,
               r * 0.04 + mouth * r * 0.2, 0, 0, Math.PI * 2);
   ctx.fill();
 
-  // headphone
   if (av.phones) {
     ctx.strokeStyle = av.phone;
     ctx.lineWidth = r * 0.12;
@@ -238,12 +291,11 @@ function drawAvatar(ctx, cx, cy, r, av, mouth, blink, active, t) {
     ctx.beginPath(); ctx.ellipse(cx - r * 1.1, hy + r * 0.05, r * 0.16, r * 0.3, 0, 0, Math.PI * 2); ctx.fill();
     ctx.beginPath(); ctx.ellipse(cx + r * 1.1, hy + r * 0.05, r * 0.16, r * 0.3, 0, 0, Math.PI * 2); ctx.fill();
   }
-
   ctx.restore();
 }
 
 // ---------- partikel ----------
-function drawParticles(ctx, st, parts, t) {
+function drawParticles(ctx, st, parts, t, H) {
   const kind = st.particles;
   const cols = [st.theme.accent, st.theme.accent2, "#ffffff"];
   for (const p of parts) {
@@ -283,11 +335,11 @@ function drawParticles(ctx, st, parts, t) {
 }
 
 // ---------- visualizer ----------
-function drawViz(ctx, st, freq, t) {
+function drawViz(ctx, st, freq, t, M, W) {
   const n = 28;
   const val = i => freq[Math.min(freq.length - 1, Math.floor(i * 0.9) + 1)] / 255;
   const c1 = st.theme.accent, c2 = st.theme.accent2;
-  const cy = 1030;
+  const cy = M.vizY;
 
   if (st.viz === "bars" || st.viz === "mirror") {
     const bw = 14, gap = 8, x0 = (W - (n * (bw + gap) - gap)) / 2;
@@ -295,10 +347,10 @@ function drawViz(ctx, st, freq, t) {
       const v = val(i);
       ctx.fillStyle = i % 2 ? c1 : c2;
       if (st.viz === "bars") {
-        const h = 8 + v * 110;
-        ctx.fillRect(x0 + i * (bw + gap), 1085 - h, bw, h);
+        const h = 8 + v * M.vizH;
+        ctx.fillRect(x0 + i * (bw + gap), M.barsBase - h, bw, h);
       } else {
-        const h = 8 + v * 100;
+        const h = 8 + v * M.vizH * 0.9;
         ctx.fillRect(x0 + i * (bw + gap), cy - h / 2, bw, h);
       }
     }
@@ -308,7 +360,7 @@ function drawViz(ctx, st, freq, t) {
       const v = val(i);
       ctx.fillStyle = i % 2 ? c1 : c2;
       ctx.beginPath();
-      ctx.arc(60 + i * step, cy, 4 + v * 18, 0, Math.PI * 2);
+      ctx.arc(60 + i * step, cy, 4 + v * (M.portrait ? 18 : 12), 0, Math.PI * 2);
       ctx.fill();
     }
   } else {
@@ -318,7 +370,7 @@ function drawViz(ctx, st, freq, t) {
     ctx.beginPath();
     for (let i = 0; i <= n; i++) {
       const x = 60 + i * (W - 120) / n;
-      const y = cy - val(Math.min(i, n - 1)) * 80 * Math.sin(i * 0.8 + t * 5);
+      const y = cy - val(Math.min(i, n - 1)) * (M.portrait ? 80 : 40) * Math.sin(i * 0.8 + t * 5);
       if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
     }
     ctx.stroke();
@@ -326,56 +378,85 @@ function drawViz(ctx, st, freq, t) {
 }
 
 // ---------- pembuat video ----------
-async function makeVideo(d, file, title, onStatus, previewBox, ac) {
+async function makeVideo(dialogs, file, title, fmtKey, onStatus, previewBox, ac) {
+  const FMT = FORMATS[fmtKey];
+  const W = FMT.W, H = FMT.H;
+  const M = metricsFor(W, H);
+  const LAY = layoutsFor(W, H);
+
   const seed = (Math.random() * 4294967296) >>> 0;
   const rnd = mulberry32(seed);
   const st = makeStyle(rnd);
-  const L = LAYOUTS[st.layout];
+  const L = LAY[st.layout];
   const pos = st.swap ? { A: L.B, B: L.A } : { A: L.A, B: L.B };
   const R = L.r;
 
-  const bg = await loadBackground(file);
+  const bg = await loadBackground(file, W, H);
 
   const canvas = document.createElement("canvas");
   canvas.width = W; canvas.height = H;
-  canvas.style.cssText = "width:100%;max-width:270px;display:block;margin-top:8px;border-radius:8px;";
+  canvas.style.cssText = "width:100%;max-width:" + (W < H ? 270 : 480) + "px;display:block;margin-top:8px;border-radius:8px;";
   previewBox.textContent = "";
   previewBox.appendChild(canvas);
   const ctx = canvas.getContext("2d");
 
-  onStatus("Memuat audio...");
-  const resp = await fetch(d.audio);
-  if (!resp.ok) throw new Error("Audio tidak ditemukan");
-  const buf = await ac.decodeAudioData(await resp.arrayBuffer());
-  const total = buf.duration;
+  // muat semua audio, lalu susun berurutan
+  const parts = [];       // {buf, offset}
+  const lines = [];
+  const sections = [];
+  let offset = 0;
+  for (let i = 0; i < dialogs.length; i++) {
+    const d = dialogs[i];
+    onStatus("Memuat audio " + (i + 1) + "/" + dialogs.length + "...");
+    const resp = await fetch(d.audio);
+    if (!resp.ok) throw new Error("Audio tidak ditemukan: " + d.audio);
+    const buf = await ac.decodeAudioData(await resp.arrayBuffer());
+    parts.push({ buf, offset });
+    sections.push({ start: offset, end: offset + buf.duration, title: d.title });
+    d.lines.forEach(l => lines.push({
+      speaker: l.speaker, text: l.text,
+      start: l.start + offset, end: l.end + offset
+    }));
+    offset += buf.duration + GAP;
+  }
+  const total = offset - GAP;
+  const multi = dialogs.length > 1;
 
   // jalur audio: sumber -> rekaman, sumber -> analyser -> gain 0 -> output
   const dest = ac.createMediaStreamDestination();
-  const source = ac.createBufferSource();
-  source.buffer = buf;
-  source.connect(dest);
   const analyser = ac.createAnalyser();
   analyser.fftSize = 128;
   analyser.smoothingTimeConstant = 0.6;
   const mute = ac.createGain();
   mute.gain.value = 0;
-  source.connect(analyser);
   analyser.connect(mute);
   mute.connect(ac.destination);
+  const sources = parts.map(p => {
+    const s = ac.createBufferSource();
+    s.buffer = p.buf;
+    s.connect(dest);
+    s.connect(analyser);
+    return s;
+  });
   const freq = new Uint8Array(analyser.frequencyBinCount);
 
-  ctx.font = "bold 44px system-ui, sans-serif";
-  const titleRows = wrap(ctx, title, W - 100);
+  ctx.font = "bold " + M.titleFont + "px system-ui, sans-serif";
+  const titleRows = wrap(ctx, title, M.titleMaxW);
+  const footY = M.portrait ? M.footerY : M.titleY + (titleRows.length - 1) * M.titleLine + 36;
+  const labelY = M.portrait ? M.titleY + titleRows.length * M.titleLine + 10 : footY;
 
-  const vig = ctx.createRadialGradient(W / 2, H / 2, H * 0.35, W / 2, H / 2, H * 0.75);
+  const diag = Math.hypot(W, H);
+  const vig = ctx.createRadialGradient(W / 2, H / 2, diag * 0.2, W / 2, H / 2, diag * 0.52);
   vig.addColorStop(0, "rgba(0,0,0,0)");
   vig.addColorStop(1, "rgba(0,0,0,.55)");
 
-  const parts = Array.from({ length: 24 }, (_, i) => ({
+  const pcount = M.portrait ? 24 : 30;
+  const dots = Array.from({ length: pcount }, (_, i) => ({
     i, x: rnd() * W, y: rnd() * H, r: 3 + rnd() * 9,
     v: 20 + rnd() * 60, ph: rnd() * 6.28, rot: 0.5 + rnd() * 2
   }));
 
+  const sx = W / 720;
   let level = 0;
 
   function draw(t) {
@@ -389,8 +470,8 @@ async function makeVideo(d, file, title, onStatus, previewBox, ac) {
     let z = 1, ox = 0;
     if (st.cam === "zoomin") z = 1 + 0.12 * prog;
     else if (st.cam === "zoomout") z = 1.12 - 0.12 * prog;
-    else if (st.cam === "panleft") { z = 1.1; ox = 30 - 60 * prog; }
-    else { z = 1.1; ox = -30 + 60 * prog; }
+    else if (st.cam === "panleft") { z = 1.1; ox = (30 - 60 * prog) * sx; }
+    else { z = 1.1; ox = (-30 + 60 * prog) * sx; }
     ctx.save();
     ctx.translate(W / 2 + ox, H / 2);
     ctx.scale(z, z);
@@ -401,7 +482,7 @@ async function makeVideo(d, file, title, onStatus, previewBox, ac) {
     ctx.fillRect(0, 0, W, H);
     if (st.vignette) { ctx.fillStyle = vig; ctx.fillRect(0, 0, W, H); }
 
-    drawParticles(ctx, st, parts, t);
+    drawParticles(ctx, st, dots, t, H);
 
     // bingkai
     if (st.frame === "rounded") {
@@ -426,13 +507,25 @@ async function makeVideo(d, file, title, onStatus, previewBox, ac) {
 
     // judul
     ctx.fillStyle = st.theme.accent;
-    ctx.font = "bold 44px system-ui, sans-serif";
-    titleRows.forEach((r, i) => ctx.fillText(r, W / 2, 110 + i * 56));
+    ctx.font = "bold " + M.titleFont + "px system-ui, sans-serif";
+    titleRows.forEach((r, i) => ctx.fillText(r, W / 2, M.titleY + i * M.titleLine));
+
+    // bagian aktif (untuk video gabungan)
+    let sec = sections[0];
+    for (const s of sections) if (s.start <= t) sec = s;
+
+    if (multi) {
+      ctx.fillStyle = "rgba(255,255,255,.9)";
+      ctx.font = "bold 26px system-ui, sans-serif";
+      const n = sections.indexOf(sec) + 1;
+      ctx.fillText("Part " + n + "/" + sections.length + ": " + sec.title, W / 2, labelY);
+    }
 
     // baris aktif
     let idx = -1;
-    for (let i = 0; i < d.lines.length; i++) if (d.lines[i].start <= t) idx = i;
-    const cur = idx >= 0 ? d.lines[idx] : null;
+    for (let i = 0; i < lines.length; i++) if (lines[i].start <= t) idx = i;
+    let cur = idx >= 0 ? lines[idx] : null;
+    if (cur && cur.start < sec.start) cur = null;   // jeda antar dialog
     const speaking = cur && t <= cur.end + 0.1;
     const activeSpk = speaking ? cur.speaker : null;
 
@@ -477,15 +570,15 @@ async function makeVideo(d, file, title, onStatus, previewBox, ac) {
       ctx.translate(W / 2, L.subY + dy);
       ctx.scale(sc, sc);
       ctx.globalAlpha = al;
-      ctx.font = "bold 54px system-ui, sans-serif";
-      const rows = wrap(ctx, cur.text, W - 110);
-      const y0 = -((rows.length - 1) * 33);
+      ctx.font = "bold " + M.subFont + "px system-ui, sans-serif";
+      const rows = wrap(ctx, cur.text, M.subMaxW);
+      const y0 = -((rows.length - 1) * M.subLine / 2);
 
       if (st.subBox) {
         let mw = 0;
         rows.forEach(r => { mw = Math.max(mw, ctx.measureText(r).width); });
         ctx.fillStyle = "rgba(0,0,0,.5)";
-        rr(ctx, -mw / 2 - 28, y0 - 58, mw + 56, rows.length * 66 + 20, 26);
+        rr(ctx, -mw / 2 - 28, y0 - M.subFont * 1.07, mw + 56, rows.length * M.subLine + 20, 26);
         ctx.fill();
       }
 
@@ -504,24 +597,26 @@ async function makeVideo(d, file, title, onStatus, previewBox, ac) {
         const shown = r.slice(0, Math.max(0, Math.min(r.length, reveal)));
         reveal -= r.length + 1;
         if (!shown) return;
-        ctx.strokeText(shown, -w / 2, y0 + i * 66);
-        ctx.fillText(shown, -w / 2, y0 + i * 66);
+        ctx.strokeText(shown, -w / 2, y0 + i * M.subLine);
+        ctx.fillText(shown, -w / 2, y0 + i * M.subLine);
       });
       ctx.restore();
       ctx.textAlign = "center";
     }
 
-    drawViz(ctx, st, freq, t);
+    drawViz(ctx, st, freq, t, M, W);
 
-    // footer + progres
+    // footer (kalau bukan video gabungan landscape) + progres
     ctx.textAlign = "center";
-    ctx.fillStyle = "rgba(255,255,255,.85)";
-    ctx.font = "bold 28px system-ui, sans-serif";
-    ctx.fillText(st.footer, W / 2, 1135);
+    if (M.portrait || !multi) {
+      ctx.fillStyle = "rgba(255,255,255,.85)";
+      ctx.font = "bold " + (M.portrait ? 28 : 24) + "px system-ui, sans-serif";
+      ctx.fillText(st.footer, W / 2, footY);
+    }
     ctx.fillStyle = "rgba(255,255,255,.3)";
-    ctx.fillRect(60, 1185, W - 120, 8);
+    ctx.fillRect(60, M.progY, W - 120, M.progH);
     ctx.fillStyle = st.theme.accent;
-    ctx.fillRect(60, 1185, (W - 120) * prog, 8);
+    ctx.fillRect(60, M.progY, (W - 120) * prog, M.progH);
   }
 
   draw(0);
@@ -531,24 +626,25 @@ async function makeVideo(d, file, title, onStatus, previewBox, ac) {
     ...dest.stream.getAudioTracks()
   ]);
   const mime = pickMime();
-  const rec = new MediaRecorder(stream, mime ? { mimeType: mime, videoBitsPerSecond: 2500000 } : {});
+  const rec = new MediaRecorder(stream, mime ? { mimeType: mime, videoBitsPerSecond: FMT.bps } : {});
   const chunks = [];
   rec.ondataavailable = e => { if (e.data && e.data.size) chunks.push(e.data); };
   const stopped = new Promise(res => { rec.onstop = res; });
 
   let ended = false;
-  source.onended = () => { ended = true; };
+  sources[sources.length - 1].onended = () => { ended = true; };
 
   rec.start(1000);
   const t0 = ac.currentTime + 0.2;
-  source.start(t0);
+  sources.forEach((s, i) => s.start(t0 + parts[i].offset));
 
   await new Promise(resolve => {
     const timer = setInterval(() => {
       const t = Math.max(0, ac.currentTime - t0);
       draw(t);
-      onStatus("Merekam... " + Math.round(Math.min(t / total, 1) * 100) +
-               "% (jangan pindah tab, layar tetap menyala)");
+      const min = Math.floor(t / 60), sec = Math.floor(t % 60);
+      onStatus("Merekam... " + Math.round(Math.min(t / total, 1) * 100) + "% (" +
+               min + ":" + String(sec).padStart(2, "0") + ") jangan pindah tab, layar tetap menyala");
       if (ended || t > total + 5) {
         clearInterval(timer);
         resolve();
@@ -573,15 +669,88 @@ async function makeVideo(d, file, title, onStatus, previewBox, ac) {
 }
 
 // ---------- halaman ----------
+function fmtTime(s) {
+  s = Math.round(s);
+  return Math.floor(s / 60) + ":" + String(s % 60).padStart(2, "0");
+}
+
 fetch("dialogs.json").then(r => r.json()).then(items => {
   const list = document.getElementById("list");
+  const picks = document.getElementById("picks");
+  const est = document.getElementById("est");
+  const status = document.getElementById("status");
+  const out = document.getElementById("out");
+  const gen = document.getElementById("gen");
   list.textContent = "";
+  picks.textContent = "";
+
+  // daftar centang
+  const boxes = items.map((d, i) => {
+    const lab = document.createElement("label");
+    lab.className = "pick";
+    const cb = document.createElement("input");
+    cb.type = "checkbox";
+    cb.addEventListener("change", updateEst);
+    lab.append(cb, " " + d.title + " (" + fmtTime(d.total || 0) + ")");
+    picks.appendChild(lab);
+    return cb;
+  });
+
+  function selected() { return items.filter((d, i) => boxes[i].checked); }
+  function updateEst() {
+    const sel = selected();
+    const sum = sel.reduce((a, d) => a + (d.total || 0), 0) + Math.max(0, sel.length - 1) * GAP;
+    est.textContent = "Perkiraan durasi: " + fmtTime(sum) + " (" + sel.length + " dialog)";
+  }
+  document.getElementById("selAll").onclick = () => { boxes.forEach(b => b.checked = true); updateEst(); };
+  document.getElementById("selNone").onclick = () => { boxes.forEach(b => b.checked = false); updateEst(); };
+
+  // tombol generate
+  gen.onclick = async () => {
+    // WAJIB paling awal (sebelum await), supaya HP mengizinkan audio
+    const ac = new (window.AudioContext || window.webkitAudioContext)();
+    ac.resume();
+
+    const sel = selected();
+    const photo = document.getElementById("photo").files[0];
+    if (!photo) { status.textContent = "Pilih foto latar dulu."; ac.close(); return; }
+    if (!sel.length) { status.textContent = "Centang minimal satu dialog."; ac.close(); return; }
+
+    gen.disabled = true;
+    out.textContent = "";
+    let lock = null;
+    try { if (navigator.wakeLock) lock = await navigator.wakeLock.request("screen"); } catch (e) {}
+    const fmtKey = document.getElementById("fmt").value;
+    try {
+      const res = await makeVideo(sel, photo, document.getElementById("vtitle").value,
+                                  fmtKey, s => status.textContent = s, out, ac);
+      status.textContent = "Selesai. Ukuran: " + (res.size / 1048576).toFixed(1) + " MB. Gaya: " + res.info +
+        (res.ext === "mp4" ? "" : " | browser ini belum mendukung MP4, hasilnya WebM");
+      out.textContent = "";
+      const v = document.createElement("video");
+      v.src = res.url;
+      v.controls = true;
+      v.playsInline = true;
+      const a = document.createElement("a");
+      a.className = "dl";
+      a.href = res.url;
+      a.download = "english-listening-" + FORMATS[fmtKey].name + "-" + Date.now() + "." + res.ext;
+      a.textContent = "Download video (" + res.ext + ")";
+      out.append(v, a);
+    } catch (e) {
+      status.textContent = "Gagal: " + e.message;
+    }
+    if (lock) { try { lock.release(); } catch (e) {} }
+    gen.disabled = false;
+  };
+
+  // kartu dialog (audio + transkrip)
   items.forEach(d => {
     const card = document.createElement("div");
     card.className = "card";
 
-    const h = document.createElement("h2");
-    h.textContent = d.title;
+    const h = document.createElement("h3");
+    h.textContent = d.title + " (" + fmtTime(d.total || 0) + ")";
 
     const audio = document.createElement("audio");
     audio.controls = true;
@@ -599,68 +768,14 @@ fetch("dialogs.json").then(r => r.json()).then(items => {
     });
     btn.onclick = () => tr.classList.toggle("hidden");
 
-    const vb = document.createElement("div");
-    vb.className = "video-box";
-    const vh = document.createElement("strong");
-    vh.textContent = "Buat video Shorts";
-
-    const file = document.createElement("input");
-    file.type = "file";
-    file.accept = "image/*";
-
-    const title = document.createElement("input");
-    title.type = "text";
-    title.value = "Listening for Fluency | " + d.title;
-
-    const gen = document.createElement("button");
-    gen.textContent = "Generate video";
-
-    const status = document.createElement("small");
-    const result = document.createElement("div");
-
-    gen.onclick = async () => {
-      // WAJIB paling awal (sebelum await), supaya HP mengizinkan audio
-      const ac = new (window.AudioContext || window.webkitAudioContext)();
-      ac.resume();
-
-      if (!file.files[0]) { status.textContent = "Pilih foto latar dulu."; ac.close(); return; }
-      gen.disabled = true;
-      let lock = null;
-      try { if (navigator.wakeLock) lock = await navigator.wakeLock.request("screen"); } catch (e) {}
-      try {
-        const out = await makeVideo(d, file.files[0], title.value,
-                                    s => status.textContent = s, result, ac);
-        status.textContent = "Selesai. Ukuran: " + (out.size / 1048576).toFixed(1) + " MB. Gaya: " + out.info +
-          (out.ext === "mp4" ? "" : " | browser ini belum mendukung MP4, hasilnya WebM");
-        result.textContent = "";
-        const v = document.createElement("video");
-        v.src = out.url;
-        v.controls = true;
-        v.playsInline = true;
-        const a = document.createElement("a");
-        a.className = "dl";
-        a.href = out.url;
-        a.download = d.audio.replace("audio/", "").replace(".mp3", "") + "." + out.ext;
-        a.textContent = "Download video (" + out.ext + ")";
-        result.append(v, a);
-      } catch (e) {
-        status.textContent = "Gagal: " + e.message;
-      }
-      if (lock) { try { lock.release(); } catch (e) {} }
-      gen.disabled = false;
-    };
-
-    const note = document.createElement("div");
-    note.innerHTML = "<small>Tiap klik Generate memakai gaya animasi acak yang berbeda. Video direkam real-time, jadi durasinya sama dengan audio. Biarkan tab tetap terbuka dan layar menyala.</small>";
-
-    vb.append(vh, document.createElement("br"), file, title, gen,
-              document.createElement("br"), status, note, result);
-
-    card.append(h, audio, btn, tr, vb);
+    card.append(h, audio, btn, tr);
     list.appendChild(card);
   });
+
+  updateEst();
 }).catch(() => {
   document.getElementById("list").textContent = "No dialogs yet.";
+  document.getElementById("picks").textContent = "No dialogs yet.";
 });
 </script>
 </body>
