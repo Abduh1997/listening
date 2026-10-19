@@ -2,7 +2,7 @@ import asyncio, glob, json, os, subprocess, edge_tts
 
 VOICES = {"A": "en-US-JennyNeural", "B": "en-US-GuyNeural"}
 
-RATE = "-25%"          # kecepatan: 0% normal, -20% agak pelan, -35% sangat pelan
+RATE = "-2%"          # kecepatan: 0% normal, -20% agak pelan, -35% sangat pelan
 PAUSE_SECONDS = 0.8    # jeda antar kalimat (detik)
 VOLUME = "+0%"
 
