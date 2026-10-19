@@ -28,11 +28,19 @@
 <script>
 const W = 720, H = 1280;
 
+// ---------- format ----------
 function pickMime() {
-  const c = ["video/webm;codecs=vp8,opus", "video/webm", "video/webm;codecs=vp9,opus"];
+  const c = [
+    "video/mp4;codecs=avc1.42E01E,mp4a.40.2",
+    "video/mp4;codecs=avc1,mp4a.40.2",
+    "video/mp4",
+    "video/webm;codecs=vp8,opus",
+    "video/webm"
+  ];
   return c.find(t => window.MediaRecorder && MediaRecorder.isTypeSupported(t)) || "";
 }
 
+// ---------- util ----------
 function wrap(ctx, text, maxW) {
   const words = text.split(" "), rows = [];
   let cur = "";
@@ -54,13 +62,79 @@ async function loadBackground(file) {
   const s = Math.max(W / bmp.width, H / bmp.height);
   const w = bmp.width * s, h = bmp.height * s;
   c.drawImage(bmp, (W - w) / 2, (H - h) / 2, w, h);
-  c.fillStyle = "rgba(0,0,0,0.5)";
+  c.fillStyle = "rgba(0,0,0,0.55)";
   c.fillRect(0, 0, W, H);
   bmp.close();
   return bg;
 }
 
-async function makeVideo(d, file, title, onStatus, previewBox) {
+// ---------- karakter ----------
+function drawAvatar(ctx, cx, cy, r, kind, color, open, blink, active, t) {
+  ctx.save();
+  ctx.globalAlpha = active ? 1 : 0.55;
+
+  // badan
+  ctx.fillStyle = color;
+  ctx.beginPath();
+  ctx.ellipse(cx, cy + r * 1.35, r * 1.05, r * 0.6, 0, Math.PI, 0);
+  ctx.fill();
+
+  // kepala (sedikit bergoyang saat bicara)
+  const bob = active ? Math.sin(t * 9) * 3 * open : 0;
+  const hy = cy + bob;
+
+  // rambut belakang (perempuan)
+  if (kind === "A") {
+    ctx.fillStyle = "#3b2314";
+    ctx.beginPath();
+    ctx.ellipse(cx, hy + r * 0.2, r * 1.08, r * 1.12, 0, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // wajah
+  ctx.fillStyle = "#fcd9b6";
+  ctx.beginPath();
+  ctx.arc(cx, hy, r, 0, Math.PI * 2);
+  ctx.fill();
+
+  // rambut atas
+  ctx.fillStyle = kind === "A" ? "#3b2314" : "#1f2937";
+  ctx.beginPath();
+  ctx.moveTo(cx - r, hy - r * 0.1);
+  ctx.arc(cx, hy, r, Math.PI * 1.02, Math.PI * 1.98);
+  ctx.lineTo(cx + r, hy - r * 0.1);
+  ctx.quadraticCurveTo(cx, hy - r * 0.55, cx - r, hy - r * 0.1);
+  ctx.fill();
+  if (kind === "A") {
+    ctx.beginPath();
+    ctx.arc(cx, hy - r * 1.05, r * 0.3, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // mata
+  ctx.fillStyle = "#111827";
+  const ey = hy + r * 0.05;
+  const eh = Math.max(1.5, r * 0.09 * (1 - blink));
+  ctx.beginPath(); ctx.ellipse(cx - r * 0.36, ey, r * 0.09, eh, 0, 0, Math.PI * 2); ctx.fill();
+  ctx.beginPath(); ctx.ellipse(cx + r * 0.36, ey, r * 0.09, eh, 0, 0, Math.PI * 2); ctx.fill();
+
+  // pipi
+  ctx.fillStyle = "rgba(244,114,182,.35)";
+  ctx.beginPath(); ctx.arc(cx - r * 0.55, hy + r * 0.3, r * 0.14, 0, Math.PI * 2); ctx.fill();
+  ctx.beginPath(); ctx.arc(cx + r * 0.55, hy + r * 0.3, r * 0.14, 0, Math.PI * 2); ctx.fill();
+
+  // mulut (membuka sesuai suara)
+  ctx.fillStyle = "#7f1d1d";
+  ctx.beginPath();
+  ctx.ellipse(cx, hy + r * 0.48, r * 0.2 + open * r * 0.06,
+              r * 0.04 + open * r * 0.2, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.restore();
+}
+
+// ---------- pembuat video ----------
+async function makeVideo(d, file, title, onStatus, previewBox, ac) {
   const bg = await loadBackground(file);
 
   const canvas = document.createElement("canvas");
@@ -70,59 +144,138 @@ async function makeVideo(d, file, title, onStatus, previewBox) {
   previewBox.appendChild(canvas);
   const ctx = canvas.getContext("2d");
 
-  const audio = new Audio(d.audio);
-  audio.preload = "auto";
-  await new Promise((res, rej) => {
-    audio.oncanplaythrough = res;
-    audio.onerror = () => rej(new Error("Audio gagal dimuat"));
-    audio.load();
-  });
-  const total = d.total || audio.duration;
+  onStatus("Memuat audio...");
+  const resp = await fetch(d.audio);
+  if (!resp.ok) throw new Error("Audio tidak ditemukan");
+  const buf = await ac.decodeAudioData(await resp.arrayBuffer());
+  const total = buf.duration;
+
+  // jalur audio: sumber -> rekaman, sumber -> analyser -> gain 0 -> output
+  const dest = ac.createMediaStreamDestination();
+  const source = ac.createBufferSource();
+  source.buffer = buf;
+  source.connect(dest);
+  const analyser = ac.createAnalyser();
+  analyser.fftSize = 128;
+  analyser.smoothingTimeConstant = 0.6;
+  const mute = ac.createGain();
+  mute.gain.value = 0;
+  source.connect(analyser);
+  analyser.connect(mute);
+  mute.connect(ac.destination);
+  const freq = new Uint8Array(analyser.frequencyBinCount);
 
   ctx.font = "bold 44px system-ui, sans-serif";
   const titleRows = wrap(ctx, title, W - 100);
 
+  // partikel melayang
+  const parts = Array.from({ length: 22 }, (_, i) => ({
+    x: (i * 97) % W, y: (i * 211) % H, r: 3 + (i % 5) * 2,
+    v: 20 + (i % 7) * 9, ph: i
+  }));
+
+  const BARS = 28;
+  let level = 0;
+
   function draw(t) {
+    analyser.getByteFrequencyData(freq);
+    let sum = 0;
+    for (let i = 0; i < 24; i++) sum += freq[i];
+    const raw = sum / (24 * 255);
+    level = level * 0.55 + Math.min(1, raw * 2.2) * 0.45;
+
     ctx.drawImage(bg, 0, 0);
     ctx.textAlign = "center";
 
+    // partikel
+    ctx.fillStyle = "rgba(255,255,255,.22)";
+    for (const p of parts) {
+      const y = ((p.y - t * p.v) % H + H) % H;
+      const x = p.x + Math.sin(t + p.ph) * 18;
+      ctx.beginPath(); ctx.arc(x, y, p.r, 0, Math.PI * 2); ctx.fill();
+    }
+
+    // judul
     ctx.fillStyle = "#fde047";
     ctx.font = "bold 44px system-ui, sans-serif";
-    titleRows.forEach((r, i) => ctx.fillText(r, W / 2, 130 + i * 56));
+    titleRows.forEach((r, i) => ctx.fillText(r, W / 2, 110 + i * 56));
 
-    let cur = null;
-    for (const l of d.lines) if (l.start <= t) cur = l;
+    // baris aktif
+    let idx = -1;
+    for (let i = 0; i < d.lines.length; i++) if (d.lines[i].start <= t) idx = i;
+    const cur = idx >= 0 ? d.lines[idx] : null;
+    const speaking = cur && t <= cur.end + 0.1;
+    const activeSpk = speaking ? cur.speaker : null;
+
+    // karakter
+    const blink = (t % 3.2) < 0.15 ? 1 : 0;
+    const open = speaking ? Math.min(1, level * 1.6 + 0.08) : 0;
+    const cy = 470;
+    [["A", 190, "#ec4899", "Speaker 1"], ["B", 530, "#3b82f6", "Speaker 2"]].forEach(([k, cx, col, name]) => {
+      const act = activeSpk === k;
+      const pulse = act ? 1 + level * 0.12 : 1;
+      const r = 88 * (act ? 1.1 : 1) * pulse;
+      if (act) {
+        ctx.strokeStyle = col;
+        ctx.lineWidth = 6;
+        for (let i = 0; i < 2; i++) {
+          const ph = ((t * 1.4 + i * 0.5) % 1);
+          ctx.globalAlpha = 0.6 * (1 - ph);
+          ctx.beginPath();
+          ctx.arc(cx, cy, r + 12 + ph * 55, 0, Math.PI * 2);
+          ctx.stroke();
+        }
+        ctx.globalAlpha = 1;
+      }
+      drawAvatar(ctx, cx, cy, r, k, col, act ? open : 0, blink, act, t);
+      ctx.fillStyle = act ? "#ffffff" : "rgba(255,255,255,.55)";
+      ctx.font = "bold 28px system-ui, sans-serif";
+      ctx.fillText(name, cx, cy + 205);
+    });
+
+    // subtitle (efek pop saat baris baru muncul)
     if (cur) {
-      ctx.fillStyle = cur.speaker === "A" ? "#f9a8d4" : "#93c5fd";
-      ctx.font = "bold 30px system-ui, sans-serif";
-      ctx.fillText(cur.speaker === "A" ? "Speaker 1" : "Speaker 2", W / 2, H / 2 - 150);
-
+      const age = Math.max(0, t - cur.start);
+      const k = Math.min(1, age / 0.25);
+      const scale = 0.85 + 0.15 * (1 - Math.pow(1 - k, 3));
+      ctx.save();
+      ctx.translate(W / 2, 830);
+      ctx.scale(scale, scale);
+      ctx.globalAlpha = k;
       ctx.font = "bold 54px system-ui, sans-serif";
-      const rows = wrap(ctx, cur.text, W - 100);
-      const y0 = H / 2 - ((rows.length - 1) * 33);
-      ctx.lineWidth = 8;
+      const rows = wrap(ctx, cur.text, W - 110);
+      const y0 = -((rows.length - 1) * 33);
+      ctx.lineWidth = 9;
       ctx.lineJoin = "round";
       ctx.strokeStyle = "rgba(0,0,0,.85)";
       ctx.fillStyle = "#ffffff";
       rows.forEach((r, i) => {
-        ctx.strokeText(r, W / 2, y0 + i * 66);
-        ctx.fillText(r, W / 2, y0 + i * 66);
+        ctx.strokeText(r, 0, y0 + i * 66);
+        ctx.fillText(r, 0, y0 + i * 66);
       });
+      ctx.restore();
     }
 
+    // equalizer
+    const bw = 14, gap = 8, bx0 = (W - (BARS * (bw + gap) - gap)) / 2;
+    for (let i = 0; i < BARS; i++) {
+      const v = freq[Math.min(freq.length - 1, Math.floor(i * 0.9) + 1)] / 255;
+      const h = 8 + v * 120;
+      ctx.fillStyle = i % 2 ? "#fde047" : "#fbbf24";
+      ctx.fillRect(bx0 + i * (bw + gap), 1070 - h, bw, h);
+    }
+
+    // footer + progres
+    ctx.fillStyle = "rgba(255,255,255,.85)";
+    ctx.font = "bold 28px system-ui, sans-serif";
+    ctx.fillText("Listen  •  Repeat  •  Speak", W / 2, 1135);
     ctx.fillStyle = "rgba(255,255,255,.3)";
-    ctx.fillRect(60, H - 120, W - 120, 8);
+    ctx.fillRect(60, 1185, W - 120, 8);
     ctx.fillStyle = "#fde047";
-    ctx.fillRect(60, H - 120, (W - 120) * Math.min(t / total, 1), 8);
+    ctx.fillRect(60, 1185, (W - 120) * Math.min(t / total, 1), 8);
   }
 
   draw(0);
-
-  const ac = new AudioContext();
-  await ac.resume();
-  const src = ac.createMediaElementSource(audio);
-  const dest = ac.createMediaStreamDestination();
-  src.connect(dest);
 
   const stream = new MediaStream([
     ...canvas.captureStream(25).getVideoTracks(),
@@ -134,17 +287,20 @@ async function makeVideo(d, file, title, onStatus, previewBox) {
   rec.ondataavailable = e => { if (e.data && e.data.size) chunks.push(e.data); };
   const stopped = new Promise(res => { rec.onstop = res; });
 
+  let ended = false;
+  source.onended = () => { ended = true; };
+
   rec.start(1000);
-  await audio.play();
+  const t0 = ac.currentTime + 0.2;
+  source.start(t0);
 
   await new Promise(resolve => {
-    const started = performance.now();
     const timer = setInterval(() => {
-      const t = audio.currentTime;
+      const t = Math.max(0, ac.currentTime - t0);
       draw(t);
-      onStatus("Merekam... " + Math.round(Math.min(t / total, 1) * 100) + "% (jangan pindah tab)");
-      const timeout = (performance.now() - started) / 1000 > total + 8;
-      if (audio.ended || t >= total - 0.05 || timeout) {
+      onStatus("Merekam... " + Math.round(Math.min(t / total, 1) * 100) +
+               "% (jangan pindah tab, layar tetap menyala)");
+      if (ended || t > total + 5) {
         clearInterval(timer);
         resolve();
       }
@@ -154,7 +310,6 @@ async function makeVideo(d, file, title, onStatus, previewBox) {
   await new Promise(r => setTimeout(r, 600));
   rec.stop();
   await stopped;
-  audio.pause();
   ac.close();
 
   const type = (rec.mimeType || "video/webm").split(";")[0];
@@ -167,6 +322,7 @@ async function makeVideo(d, file, title, onStatus, previewBox) {
   };
 }
 
+// ---------- halaman ----------
 fetch("dialogs.json").then(r => r.json()).then(items => {
   const list = document.getElementById("list");
   list.textContent = "";
@@ -193,7 +349,6 @@ fetch("dialogs.json").then(r => r.json()).then(items => {
     });
     btn.onclick = () => tr.classList.toggle("hidden");
 
-    // ---- bagian video ----
     const vb = document.createElement("div");
     vb.className = "video-box";
     const vh = document.createElement("strong");
@@ -214,16 +369,24 @@ fetch("dialogs.json").then(r => r.json()).then(items => {
     const result = document.createElement("div");
 
     gen.onclick = async () => {
-      if (!file.files[0]) { status.textContent = "Pilih foto latar dulu."; return; }
+      // WAJIB paling awal (sebelum await), supaya HP mengizinkan audio
+      const ac = new (window.AudioContext || window.webkitAudioContext)();
+      ac.resume();
+
+      if (!file.files[0]) { status.textContent = "Pilih foto latar dulu."; ac.close(); return; }
       gen.disabled = true;
+      let lock = null;
+      try { if (navigator.wakeLock) lock = await navigator.wakeLock.request("screen"); } catch (e) {}
       try {
         const out = await makeVideo(d, file.files[0], title.value,
-                                    s => status.textContent = s, result);
-        status.textContent = "Selesai. Ukuran: " + (out.size / 1048576).toFixed(1) + " MB";
+                                    s => status.textContent = s, result, ac);
+        status.textContent = "Selesai. Ukuran: " + (out.size / 1048576).toFixed(1) + " MB" +
+          (out.ext === "mp4" ? "" : " (browser ini belum mendukung MP4, hasilnya WebM)");
         result.textContent = "";
         const v = document.createElement("video");
         v.src = out.url;
         v.controls = true;
+        v.playsInline = true;
         const a = document.createElement("a");
         a.className = "dl";
         a.href = out.url;
@@ -233,11 +396,12 @@ fetch("dialogs.json").then(r => r.json()).then(items => {
       } catch (e) {
         status.textContent = "Gagal: " + e.message;
       }
+      if (lock) { try { lock.release(); } catch (e) {} }
       gen.disabled = false;
     };
 
     const note = document.createElement("div");
-    note.innerHTML = "<small>Video direkam real-time, jadi durasinya sama dengan audio. Biarkan tab ini tetap terbuka selama proses.</small>";
+    note.innerHTML = "<small>Video direkam real-time, jadi durasinya sama dengan audio. Biarkan tab ini tetap terbuka dan layar menyala selama proses.</small>";
 
     vb.append(vh, document.createElement("br"), file, title, gen,
               document.createElement("br"), status, note, result);
