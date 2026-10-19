@@ -41,6 +41,15 @@ function pickMime() {
 }
 
 // ---------- util ----------
+function mulberry32(a) {
+  return function () {
+    a |= 0; a = a + 0x6D2B79F5 | 0;
+    let t = Math.imul(a ^ a >>> 15, 1 | a);
+    t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+    return ((t ^ t >>> 14) >>> 0) / 4294967296;
+  };
+}
+
 function wrap(ctx, text, maxW) {
   const words = text.split(" "), rows = [];
   let cur = "";
@@ -53,7 +62,17 @@ function wrap(ctx, text, maxW) {
   return rows;
 }
 
-// Foto dikecilkan sekali saja ke 720x1280 + lapisan gelap (hemat memori)
+function rr(ctx, x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.arcTo(x + w, y, x + w, y + h, r);
+  ctx.arcTo(x + w, y + h, x, y + h, r);
+  ctx.arcTo(x, y + h, x, y, r);
+  ctx.arcTo(x, y, x + w, y, r);
+  ctx.closePath();
+}
+
+// Foto dikecilkan sekali saja ke 720x1280 (hemat memori)
 async function loadBackground(file) {
   const bmp = await createImageBitmap(file);
   const bg = document.createElement("canvas");
@@ -62,52 +81,121 @@ async function loadBackground(file) {
   const s = Math.max(W / bmp.width, H / bmp.height);
   const w = bmp.width * s, h = bmp.height * s;
   c.drawImage(bmp, (W - w) / 2, (H - h) / 2, w, h);
-  c.fillStyle = "rgba(0,0,0,0.55)";
-  c.fillRect(0, 0, W, H);
   bmp.close();
   return bg;
 }
 
+// ---------- pengacak gaya ----------
+const THEMES = [
+  { accent: "#fde047", accent2: "#fb923c", a: "#ec4899", b: "#3b82f6", tint: "rgba(8,8,30,.58)" },
+  { accent: "#5eead4", accent2: "#38bdf8", a: "#f472b6", b: "#22c55e", tint: "rgba(4,30,40,.58)" },
+  { accent: "#f9a8d4", accent2: "#c084fc", a: "#f43f5e", b: "#6366f1", tint: "rgba(35,8,40,.58)" },
+  { accent: "#fcd34d", accent2: "#f87171", a: "#fb923c", b: "#14b8a6", tint: "rgba(40,15,5,.55)" },
+  { accent: "#a3e635", accent2: "#22d3ee", a: "#e879f9", b: "#0ea5e9", tint: "rgba(5,25,15,.58)" }
+];
+const LAYOUTS = {
+  side: { A: { x: 190, y: 470 }, B: { x: 530, y: 470 }, r: 88, subY: 830 },
+  wide: { A: { x: 175, y: 440 }, B: { x: 545, y: 440 }, r: 98, subY: 850 },
+  diag: { A: { x: 215, y: 410 }, B: { x: 505, y: 575 }, r: 80, subY: 890 }
+};
+const FOOTERS = [
+  "Listen  \u2022  Repeat  \u2022  Speak",
+  "Train your ears every day",
+  "Replay until you get it",
+  "Shadow the speakers!",
+  "Speak along  \u2022  Level up",
+  "Listen again, understand more"
+];
+const SKINS = ["#fcd9b6", "#f1c27d", "#e0ac69", "#c68642", "#8d5524"];
+const HAIRS = ["#3b2314", "#1f2937", "#92400e", "#b45309", "#111827", "#7c2d12", "#facc15"];
+
+function makeStyle(rnd) {
+  const pick = a => a[Math.floor(rnd() * a.length)];
+  const theme = pick(THEMES);
+  const av = (styles, color) => ({
+    style: pick(styles),
+    skin: pick(SKINS),
+    hair: pick(HAIRS),
+    color,
+    glasses: rnd() < 0.3,
+    phones: rnd() < 0.45,
+    phone: theme.accent
+  });
+  return {
+    theme,
+    layout: pick(Object.keys(LAYOUTS)),
+    swap: rnd() < 0.5,
+    viz: pick(["bars", "mirror", "dots", "wave"]),
+    particles: pick(["bubbles", "stars", "snow", "confetti"]),
+    subtitle: pick(["pop", "slide", "fade", "type"]),
+    subBox: rnd() < 0.5,
+    cam: pick(["zoomin", "zoomout", "panleft", "panright"]),
+    frame: pick(["none", "rounded", "corners"]),
+    vignette: rnd() < 0.6,
+    footer: pick(FOOTERS),
+    avA: av(["long", "bun", "curly"], theme.a),
+    avB: av(["short", "cap", "curly"], theme.b)
+  };
+}
+
 // ---------- karakter ----------
-function drawAvatar(ctx, cx, cy, r, kind, color, open, blink, active, t) {
+function drawAvatar(ctx, cx, cy, r, av, mouth, blink, active, t) {
   ctx.save();
-  ctx.globalAlpha = active ? 1 : 0.55;
+  ctx.globalAlpha = active ? 1 : 0.6;
 
   // badan
-  ctx.fillStyle = color;
+  ctx.fillStyle = av.color;
   ctx.beginPath();
   ctx.ellipse(cx, cy + r * 1.35, r * 1.05, r * 0.6, 0, Math.PI, 0);
   ctx.fill();
 
-  // kepala (sedikit bergoyang saat bicara)
-  const bob = active ? Math.sin(t * 9) * 3 * open : 0;
-  const hy = cy + bob;
+  const hy = cy + (active ? Math.sin(t * 9) * 3 * mouth : 0);
 
-  // rambut belakang (perempuan)
-  if (kind === "A") {
-    ctx.fillStyle = "#3b2314";
+  // rambut belakang
+  ctx.fillStyle = av.hair;
+  if (av.style === "long") {
     ctx.beginPath();
     ctx.ellipse(cx, hy + r * 0.2, r * 1.08, r * 1.12, 0, 0, Math.PI * 2);
     ctx.fill();
   }
 
   // wajah
-  ctx.fillStyle = "#fcd9b6";
+  ctx.fillStyle = av.skin;
   ctx.beginPath();
   ctx.arc(cx, hy, r, 0, Math.PI * 2);
   ctx.fill();
 
-  // rambut atas
-  ctx.fillStyle = kind === "A" ? "#3b2314" : "#1f2937";
-  ctx.beginPath();
-  ctx.moveTo(cx - r, hy - r * 0.1);
-  ctx.arc(cx, hy, r, Math.PI * 1.02, Math.PI * 1.98);
-  ctx.lineTo(cx + r, hy - r * 0.1);
-  ctx.quadraticCurveTo(cx, hy - r * 0.55, cx - r, hy - r * 0.1);
-  ctx.fill();
-  if (kind === "A") {
+  // rambut depan
+  ctx.fillStyle = av.hair;
+  if (av.style !== "cap") {
+    ctx.beginPath();
+    ctx.moveTo(cx - r, hy - r * 0.1);
+    ctx.arc(cx, hy, r, Math.PI * 1.02, Math.PI * 1.98);
+    ctx.lineTo(cx + r, hy - r * 0.1);
+    ctx.quadraticCurveTo(cx, hy - r * 0.55, cx - r, hy - r * 0.1);
+    ctx.fill();
+  }
+  if (av.style === "bun") {
     ctx.beginPath();
     ctx.arc(cx, hy - r * 1.05, r * 0.3, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  if (av.style === "curly") {
+    for (let i = 0; i < 7; i++) {
+      const a = Math.PI * (1.05 + i * 0.15);
+      ctx.beginPath();
+      ctx.arc(cx + Math.cos(a) * r * 0.95, hy + Math.sin(a) * r * 0.95, r * 0.28, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+  if (av.style === "cap") {
+    ctx.fillStyle = av.color;
+    ctx.beginPath();
+    ctx.arc(cx, hy - r * 0.05, r * 1.02, Math.PI, 0);
+    ctx.closePath();
+    ctx.fill();
+    ctx.beginPath();
+    ctx.ellipse(cx + r * 0.55, hy - r * 0.05, r * 0.6, r * 0.12, 0, 0, Math.PI * 2);
     ctx.fill();
   }
 
@@ -118,23 +206,134 @@ function drawAvatar(ctx, cx, cy, r, kind, color, open, blink, active, t) {
   ctx.beginPath(); ctx.ellipse(cx - r * 0.36, ey, r * 0.09, eh, 0, 0, Math.PI * 2); ctx.fill();
   ctx.beginPath(); ctx.ellipse(cx + r * 0.36, ey, r * 0.09, eh, 0, 0, Math.PI * 2); ctx.fill();
 
+  // kacamata
+  if (av.glasses) {
+    ctx.strokeStyle = "#111827";
+    ctx.lineWidth = 4;
+    ctx.beginPath(); ctx.arc(cx - r * 0.36, ey, r * 0.22, 0, Math.PI * 2); ctx.stroke();
+    ctx.beginPath(); ctx.arc(cx + r * 0.36, ey, r * 0.22, 0, Math.PI * 2); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(cx - r * 0.14, ey); ctx.lineTo(cx + r * 0.14, ey); ctx.stroke();
+  }
+
   // pipi
   ctx.fillStyle = "rgba(244,114,182,.35)";
   ctx.beginPath(); ctx.arc(cx - r * 0.55, hy + r * 0.3, r * 0.14, 0, Math.PI * 2); ctx.fill();
   ctx.beginPath(); ctx.arc(cx + r * 0.55, hy + r * 0.3, r * 0.14, 0, Math.PI * 2); ctx.fill();
 
-  // mulut (membuka sesuai suara)
+  // mulut
   ctx.fillStyle = "#7f1d1d";
   ctx.beginPath();
-  ctx.ellipse(cx, hy + r * 0.48, r * 0.2 + open * r * 0.06,
-              r * 0.04 + open * r * 0.2, 0, 0, Math.PI * 2);
+  ctx.ellipse(cx, hy + r * 0.48, r * 0.2 + mouth * r * 0.06,
+              r * 0.04 + mouth * r * 0.2, 0, 0, Math.PI * 2);
   ctx.fill();
+
+  // headphone
+  if (av.phones) {
+    ctx.strokeStyle = av.phone;
+    ctx.lineWidth = r * 0.12;
+    ctx.beginPath();
+    ctx.arc(cx, hy, r * 1.1, Math.PI * 1.03, Math.PI * 1.97);
+    ctx.stroke();
+    ctx.fillStyle = av.phone;
+    ctx.beginPath(); ctx.ellipse(cx - r * 1.1, hy + r * 0.05, r * 0.16, r * 0.3, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(cx + r * 1.1, hy + r * 0.05, r * 0.16, r * 0.3, 0, 0, Math.PI * 2); ctx.fill();
+  }
 
   ctx.restore();
 }
 
+// ---------- partikel ----------
+function drawParticles(ctx, st, parts, t) {
+  const kind = st.particles;
+  const cols = [st.theme.accent, st.theme.accent2, "#ffffff"];
+  for (const p of parts) {
+    let y;
+    if (kind === "snow" || kind === "confetti") y = (p.y + t * p.v) % H;
+    else y = ((p.y - t * p.v) % H + H) % H;
+    const x = p.x + Math.sin(t * 0.8 + p.ph) * 20;
+
+    if (kind === "bubbles") {
+      ctx.strokeStyle = "rgba(255,255,255,.35)";
+      ctx.lineWidth = 3;
+      ctx.beginPath(); ctx.arc(x, y, p.r * 1.8, 0, Math.PI * 2); ctx.stroke();
+    } else if (kind === "snow") {
+      ctx.fillStyle = "rgba(255,255,255,.6)";
+      ctx.beginPath(); ctx.arc(x, y, p.r * 0.7, 0, Math.PI * 2); ctx.fill();
+    } else if (kind === "stars") {
+      const s = p.r * 2;
+      ctx.fillStyle = cols[p.i % 2];
+      ctx.globalAlpha = 0.3 + 0.4 * Math.abs(Math.sin(t * 3 + p.ph));
+      ctx.beginPath();
+      ctx.moveTo(x, y - s); ctx.lineTo(x + s * 0.3, y); ctx.lineTo(x, y + s); ctx.lineTo(x - s * 0.3, y);
+      ctx.closePath(); ctx.fill();
+      ctx.beginPath();
+      ctx.moveTo(x - s, y); ctx.lineTo(x, y + s * 0.3); ctx.lineTo(x + s, y); ctx.lineTo(x, y - s * 0.3);
+      ctx.closePath(); ctx.fill();
+      ctx.globalAlpha = 1;
+    } else {
+      ctx.save();
+      ctx.translate(x, y);
+      ctx.rotate(t * p.rot + p.ph);
+      ctx.fillStyle = cols[p.i % 3];
+      ctx.globalAlpha = 0.75;
+      ctx.fillRect(-p.r, -p.r / 2, p.r * 2, p.r);
+      ctx.restore();
+    }
+  }
+}
+
+// ---------- visualizer ----------
+function drawViz(ctx, st, freq, t) {
+  const n = 28;
+  const val = i => freq[Math.min(freq.length - 1, Math.floor(i * 0.9) + 1)] / 255;
+  const c1 = st.theme.accent, c2 = st.theme.accent2;
+  const cy = 1030;
+
+  if (st.viz === "bars" || st.viz === "mirror") {
+    const bw = 14, gap = 8, x0 = (W - (n * (bw + gap) - gap)) / 2;
+    for (let i = 0; i < n; i++) {
+      const v = val(i);
+      ctx.fillStyle = i % 2 ? c1 : c2;
+      if (st.viz === "bars") {
+        const h = 8 + v * 110;
+        ctx.fillRect(x0 + i * (bw + gap), 1085 - h, bw, h);
+      } else {
+        const h = 8 + v * 100;
+        ctx.fillRect(x0 + i * (bw + gap), cy - h / 2, bw, h);
+      }
+    }
+  } else if (st.viz === "dots") {
+    const step = (W - 120) / (n - 1);
+    for (let i = 0; i < n; i++) {
+      const v = val(i);
+      ctx.fillStyle = i % 2 ? c1 : c2;
+      ctx.beginPath();
+      ctx.arc(60 + i * step, cy, 4 + v * 18, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  } else {
+    ctx.strokeStyle = c1;
+    ctx.lineWidth = 6;
+    ctx.lineJoin = "round";
+    ctx.beginPath();
+    for (let i = 0; i <= n; i++) {
+      const x = 60 + i * (W - 120) / n;
+      const y = cy - val(Math.min(i, n - 1)) * 80 * Math.sin(i * 0.8 + t * 5);
+      if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+    }
+    ctx.stroke();
+  }
+}
+
 // ---------- pembuat video ----------
 async function makeVideo(d, file, title, onStatus, previewBox, ac) {
+  const seed = (Math.random() * 4294967296) >>> 0;
+  const rnd = mulberry32(seed);
+  const st = makeStyle(rnd);
+  const L = LAYOUTS[st.layout];
+  const pos = st.swap ? { A: L.B, B: L.A } : { A: L.A, B: L.B };
+  const R = L.r;
+
   const bg = await loadBackground(file);
 
   const canvas = document.createElement("canvas");
@@ -168,35 +367,65 @@ async function makeVideo(d, file, title, onStatus, previewBox, ac) {
   ctx.font = "bold 44px system-ui, sans-serif";
   const titleRows = wrap(ctx, title, W - 100);
 
-  // partikel melayang
-  const parts = Array.from({ length: 22 }, (_, i) => ({
-    x: (i * 97) % W, y: (i * 211) % H, r: 3 + (i % 5) * 2,
-    v: 20 + (i % 7) * 9, ph: i
+  const vig = ctx.createRadialGradient(W / 2, H / 2, H * 0.35, W / 2, H / 2, H * 0.75);
+  vig.addColorStop(0, "rgba(0,0,0,0)");
+  vig.addColorStop(1, "rgba(0,0,0,.55)");
+
+  const parts = Array.from({ length: 24 }, (_, i) => ({
+    i, x: rnd() * W, y: rnd() * H, r: 3 + rnd() * 9,
+    v: 20 + rnd() * 60, ph: rnd() * 6.28, rot: 0.5 + rnd() * 2
   }));
 
-  const BARS = 28;
   let level = 0;
 
   function draw(t) {
     analyser.getByteFrequencyData(freq);
     let sum = 0;
     for (let i = 0; i < 24; i++) sum += freq[i];
-    const raw = sum / (24 * 255);
-    level = level * 0.55 + Math.min(1, raw * 2.2) * 0.45;
+    level = level * 0.55 + Math.min(1, (sum / (24 * 255)) * 2.2) * 0.45;
 
-    ctx.drawImage(bg, 0, 0);
-    ctx.textAlign = "center";
+    // latar + gerakan kamera
+    const prog = Math.min(t / total, 1);
+    let z = 1, ox = 0;
+    if (st.cam === "zoomin") z = 1 + 0.12 * prog;
+    else if (st.cam === "zoomout") z = 1.12 - 0.12 * prog;
+    else if (st.cam === "panleft") { z = 1.1; ox = 30 - 60 * prog; }
+    else { z = 1.1; ox = -30 + 60 * prog; }
+    ctx.save();
+    ctx.translate(W / 2 + ox, H / 2);
+    ctx.scale(z, z);
+    ctx.drawImage(bg, -W / 2, -H / 2);
+    ctx.restore();
 
-    // partikel
-    ctx.fillStyle = "rgba(255,255,255,.22)";
-    for (const p of parts) {
-      const y = ((p.y - t * p.v) % H + H) % H;
-      const x = p.x + Math.sin(t + p.ph) * 18;
-      ctx.beginPath(); ctx.arc(x, y, p.r, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = st.theme.tint;
+    ctx.fillRect(0, 0, W, H);
+    if (st.vignette) { ctx.fillStyle = vig; ctx.fillRect(0, 0, W, H); }
+
+    drawParticles(ctx, st, parts, t);
+
+    // bingkai
+    if (st.frame === "rounded") {
+      ctx.strokeStyle = st.theme.accent;
+      ctx.globalAlpha = 0.7;
+      ctx.lineWidth = 6;
+      rr(ctx, 22, 22, W - 44, H - 44, 40);
+      ctx.stroke();
+      ctx.globalAlpha = 1;
+    } else if (st.frame === "corners") {
+      ctx.strokeStyle = st.theme.accent;
+      ctx.lineWidth = 8;
+      const m = 30, s = 90;
+      [[m, m, 1, 1], [W - m, m, -1, 1], [m, H - m, 1, -1], [W - m, H - m, -1, -1]].forEach(([x, y, dx, dy]) => {
+        ctx.beginPath();
+        ctx.moveTo(x + dx * s, y); ctx.lineTo(x, y); ctx.lineTo(x, y + dy * s);
+        ctx.stroke();
+      });
     }
 
+    ctx.textAlign = "center";
+
     // judul
-    ctx.fillStyle = "#fde047";
+    ctx.fillStyle = st.theme.accent;
     ctx.font = "bold 44px system-ui, sans-serif";
     titleRows.forEach((r, i) => ctx.fillText(r, W / 2, 110 + i * 56));
 
@@ -210,13 +439,13 @@ async function makeVideo(d, file, title, onStatus, previewBox, ac) {
     // karakter
     const blink = (t % 3.2) < 0.15 ? 1 : 0;
     const open = speaking ? Math.min(1, level * 1.6 + 0.08) : 0;
-    const cy = 470;
-    [["A", 190, "#ec4899", "Speaker 1"], ["B", 530, "#3b82f6", "Speaker 2"]].forEach(([k, cx, col, name]) => {
+    [["A", st.avA, "Speaker 1"], ["B", st.avB, "Speaker 2"]].forEach(([k, av, name]) => {
+      const { x: cx, y: cy } = pos[k];
       const act = activeSpk === k;
       const pulse = act ? 1 + level * 0.12 : 1;
-      const r = 88 * (act ? 1.1 : 1) * pulse;
+      const r = R * (act ? 1.1 : 1) * pulse;
       if (act) {
-        ctx.strokeStyle = col;
+        ctx.strokeStyle = av.color;
         ctx.lineWidth = 6;
         for (let i = 0; i < 2; i++) {
           const ph = ((t * 1.4 + i * 0.5) % 1);
@@ -227,52 +456,72 @@ async function makeVideo(d, file, title, onStatus, previewBox, ac) {
         }
         ctx.globalAlpha = 1;
       }
-      drawAvatar(ctx, cx, cy, r, k, col, act ? open : 0, blink, act, t);
+      drawAvatar(ctx, cx, cy, r, av, act ? open : 0, blink, act, t);
       ctx.fillStyle = act ? "#ffffff" : "rgba(255,255,255,.55)";
       ctx.font = "bold 28px system-ui, sans-serif";
-      ctx.fillText(name, cx, cy + 205);
+      ctx.textAlign = "center";
+      ctx.fillText(name, cx, cy + R * 2.3);
     });
 
-    // subtitle (efek pop saat baris baru muncul)
+    // subtitle
     if (cur) {
       const age = Math.max(0, t - cur.start);
       const k = Math.min(1, age / 0.25);
-      const scale = 0.85 + 0.15 * (1 - Math.pow(1 - k, 3));
+      const e = 1 - Math.pow(1 - k, 3);
+      let sc = 1, dy = 0, al = 1;
+      if (st.subtitle === "pop") { sc = 0.85 + 0.15 * e; al = k; }
+      else if (st.subtitle === "slide") { dy = (1 - e) * 50; al = k; }
+      else if (st.subtitle === "fade") { al = Math.min(1, age / 0.4); }
+
       ctx.save();
-      ctx.translate(W / 2, 830);
-      ctx.scale(scale, scale);
-      ctx.globalAlpha = k;
+      ctx.translate(W / 2, L.subY + dy);
+      ctx.scale(sc, sc);
+      ctx.globalAlpha = al;
       ctx.font = "bold 54px system-ui, sans-serif";
       const rows = wrap(ctx, cur.text, W - 110);
       const y0 = -((rows.length - 1) * 33);
-      ctx.lineWidth = 9;
+
+      if (st.subBox) {
+        let mw = 0;
+        rows.forEach(r => { mw = Math.max(mw, ctx.measureText(r).width); });
+        ctx.fillStyle = "rgba(0,0,0,.5)";
+        rr(ctx, -mw / 2 - 28, y0 - 58, mw + 56, rows.length * 66 + 20, 26);
+        ctx.fill();
+      }
+
+      let reveal = Infinity;
+      if (st.subtitle === "type") {
+        const dur = Math.max(0.5, (cur.end - cur.start) * 0.6);
+        reveal = Math.floor(cur.text.length * Math.min(1, age / dur));
+      }
+      ctx.textAlign = "left";
+      ctx.lineWidth = st.subBox ? 5 : 9;
       ctx.lineJoin = "round";
       ctx.strokeStyle = "rgba(0,0,0,.85)";
       ctx.fillStyle = "#ffffff";
       rows.forEach((r, i) => {
-        ctx.strokeText(r, 0, y0 + i * 66);
-        ctx.fillText(r, 0, y0 + i * 66);
+        const w = ctx.measureText(r).width;
+        const shown = r.slice(0, Math.max(0, Math.min(r.length, reveal)));
+        reveal -= r.length + 1;
+        if (!shown) return;
+        ctx.strokeText(shown, -w / 2, y0 + i * 66);
+        ctx.fillText(shown, -w / 2, y0 + i * 66);
       });
       ctx.restore();
+      ctx.textAlign = "center";
     }
 
-    // equalizer
-    const bw = 14, gap = 8, bx0 = (W - (BARS * (bw + gap) - gap)) / 2;
-    for (let i = 0; i < BARS; i++) {
-      const v = freq[Math.min(freq.length - 1, Math.floor(i * 0.9) + 1)] / 255;
-      const h = 8 + v * 120;
-      ctx.fillStyle = i % 2 ? "#fde047" : "#fbbf24";
-      ctx.fillRect(bx0 + i * (bw + gap), 1070 - h, bw, h);
-    }
+    drawViz(ctx, st, freq, t);
 
     // footer + progres
+    ctx.textAlign = "center";
     ctx.fillStyle = "rgba(255,255,255,.85)";
     ctx.font = "bold 28px system-ui, sans-serif";
-    ctx.fillText("Listen  •  Repeat  •  Speak", W / 2, 1135);
+    ctx.fillText(st.footer, W / 2, 1135);
     ctx.fillStyle = "rgba(255,255,255,.3)";
     ctx.fillRect(60, 1185, W - 120, 8);
-    ctx.fillStyle = "#fde047";
-    ctx.fillRect(60, 1185, (W - 120) * Math.min(t / total, 1), 8);
+    ctx.fillStyle = st.theme.accent;
+    ctx.fillRect(60, 1185, (W - 120) * prog, 8);
   }
 
   draw(0);
@@ -318,7 +567,8 @@ async function makeVideo(d, file, title, onStatus, previewBox, ac) {
   return {
     url: URL.createObjectURL(blob),
     ext: type.includes("mp4") ? "mp4" : "webm",
-    size: blob.size
+    size: blob.size,
+    info: st.layout + " / " + st.viz + " / " + st.particles + " / " + st.subtitle + " / " + st.cam + " (#" + seed + ")"
   };
 }
 
@@ -380,8 +630,8 @@ fetch("dialogs.json").then(r => r.json()).then(items => {
       try {
         const out = await makeVideo(d, file.files[0], title.value,
                                     s => status.textContent = s, result, ac);
-        status.textContent = "Selesai. Ukuran: " + (out.size / 1048576).toFixed(1) + " MB" +
-          (out.ext === "mp4" ? "" : " (browser ini belum mendukung MP4, hasilnya WebM)");
+        status.textContent = "Selesai. Ukuran: " + (out.size / 1048576).toFixed(1) + " MB. Gaya: " + out.info +
+          (out.ext === "mp4" ? "" : " | browser ini belum mendukung MP4, hasilnya WebM");
         result.textContent = "";
         const v = document.createElement("video");
         v.src = out.url;
@@ -401,7 +651,7 @@ fetch("dialogs.json").then(r => r.json()).then(items => {
     };
 
     const note = document.createElement("div");
-    note.innerHTML = "<small>Video direkam real-time, jadi durasinya sama dengan audio. Biarkan tab ini tetap terbuka dan layar menyala selama proses.</small>";
+    note.innerHTML = "<small>Tiap klik Generate memakai gaya animasi acak yang berbeda. Video direkam real-time, jadi durasinya sama dengan audio. Biarkan tab tetap terbuka dan layar menyala.</small>";
 
     vb.append(vh, document.createElement("br"), file, title, gen,
               document.createElement("br"), status, note, result);
