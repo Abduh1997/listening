@@ -12,7 +12,7 @@ BASE_PITCH = {"A": 2, "B": 0}  # Hz, nada dasar (naik sedikit = lebih ceria)
 PAUSE_SECONDS = 0            # jeda saat pembicara berganti
 SAME_SPEAKER_PAUSE = 0      # jeda antar kalimat dari pembicara yang sama
 VOLUME = "+0%"
-VARIATION = 1.0                # 0 = datar, 1 = normal, 1.5 = lebih ekspresif
+VARIATION = 1.5                # 0 = datar, 1 = normal, 1.5 = lebih ekspresif
 
 
 def duration(path):
