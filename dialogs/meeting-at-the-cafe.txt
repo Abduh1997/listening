@@ -1,0 +1,20 @@
+A: Hi! Sorry I'm late. Have you been waiting long?
+B: No, not at all. I just got here ten minutes ago.
+A: Good. The traffic was terrible this morning.
+B: It's okay. Let me get you something to drink. What would you like?
+A: I'd love a cappuccino, please.
+B: Sure. Would you like something to eat as well?
+A: Maybe a slice of cheesecake. I skipped breakfast today.
+B: Great idea. I'll order the same.
+A: So, how was your week?
+B: Pretty busy. I started a new project at work.
+A: That sounds exciting. What is it about?
+B: We are building a language learning app.
+A: Really? That's perfect. I'm always trying to improve my English.
+B: Then you can be my first tester.
+A: Deal! Will the app be free?
+B: Yes, the basic version will be free for everyone.
+A: Wonderful. I can't wait to try it.
+B: I'll send you the link next week.
+A: Thank you. This cheesecake is delicious, by the way.
+B: I'm glad you like it. Shall we come here again next Saturday?
