@@ -8,16 +8,132 @@
   body { font-family: system-ui, sans-serif; max-width: 640px; margin: 0 auto; padding: 16px; background: #f6f7f9; color: #222; }
   .card { background: #fff; border-radius: 12px; padding: 16px; margin-bottom: 16px; box-shadow: 0 1px 4px rgba(0,0,0,.08); }
   audio { width: 100%; margin: 8px 0; }
-  button { padding: 6px 12px; border: 0; border-radius: 8px; background: #2563eb; color: #fff; cursor: pointer; }
+  button { padding: 8px 14px; border: 0; border-radius: 8px; background: #2563eb; color: #fff; cursor: pointer; margin: 4px 4px 4px 0; }
+  button:disabled { opacity: .5; cursor: wait; }
+  input[type=text] { width: 100%; padding: 8px; margin: 6px 0; box-sizing: border-box; border: 1px solid #ccc; border-radius: 8px; }
   .line { margin: 6px 0; }
   .A { color: #be185d; } .B { color: #1d4ed8; }
   .hidden { display: none; }
+  .video-box { margin-top: 12px; padding-top: 12px; border-top: 1px solid #eee; }
+  .video-box video { width: 100%; max-width: 270px; display: block; margin-top: 8px; border-radius: 8px; }
+  .dl { display: inline-block; padding: 8px 14px; background: #16a34a; color: #fff; border-radius: 8px; text-decoration: none; margin-top: 8px; }
+  small { color: #666; }
 </style>
 </head>
 <body>
 <h1>English Listening</h1>
 <div id="list">Loading...</div>
+
 <script>
+const W = 720, H = 1280;
+
+function pickMime() {
+  const c = ["video/mp4;codecs=avc1,mp4a.40.2", "video/mp4",
+             "video/webm;codecs=vp9,opus", "video/webm"];
+  return c.find(t => window.MediaRecorder && MediaRecorder.isTypeSupported(t)) || "";
+}
+
+function wrap(ctx, text, maxW) {
+  const words = text.split(" "), rows = [];
+  let cur = "";
+  for (const w of words) {
+    const test = cur ? cur + " " + w : w;
+    if (ctx.measureText(test).width > maxW && cur) { rows.push(cur); cur = w; }
+    else cur = test;
+  }
+  if (cur) rows.push(cur);
+  return rows;
+}
+
+function drawCover(ctx, img) {
+  const s = Math.max(W / img.width, H / img.height);
+  const w = img.width * s, h = img.height * s;
+  ctx.drawImage(img, (W - w) / 2, (H - h) / 2, w, h);
+}
+
+function loadImage(file) {
+  return new Promise((res, rej) => {
+    const img = new Image();
+    img.onload = () => res(img);
+    img.onerror = rej;
+    img.src = URL.createObjectURL(file);
+  });
+}
+
+async function makeVideo(d, file, title, onStatus) {
+  const img = await loadImage(file);
+  const canvas = document.createElement("canvas");
+  canvas.width = W; canvas.height = H;
+  const ctx = canvas.getContext("2d");
+
+  const audio = new Audio(d.audio);
+  const ac = new AudioContext();
+  await ac.resume();
+  const src = ac.createMediaElementSource(audio);
+  const dest = ac.createMediaStreamDestination();
+  src.connect(dest);
+
+  const stream = new MediaStream([
+    ...canvas.captureStream(30).getVideoTracks(),
+    ...dest.stream.getAudioTracks()
+  ]);
+  const mime = pickMime();
+  const rec = new MediaRecorder(stream, mime ? { mimeType: mime, videoBitsPerSecond: 4000000 } : {});
+  const chunks = [];
+  rec.ondataavailable = e => e.data.size && chunks.push(e.data);
+
+  const done = new Promise(res => { rec.onstop = res; });
+  const total = d.total || d.lines[d.lines.length - 1].end;
+
+  function frame() {
+    const t = audio.currentTime;
+    drawCover(ctx, img);
+    ctx.fillStyle = "rgba(0,0,0,0.5)";
+    ctx.fillRect(0, 0, W, H);
+
+    ctx.textAlign = "center";
+    ctx.fillStyle = "#fde047";
+    ctx.font = "bold 44px system-ui, sans-serif";
+    wrap(ctx, title, W - 100).forEach((r, i) => ctx.fillText(r, W / 2, 130 + i * 56));
+
+    let cur = null;
+    for (const l of d.lines) if (l.start <= t) cur = l;
+    if (cur) {
+      ctx.fillStyle = cur.speaker === "A" ? "#f9a8d4" : "#93c5fd";
+      ctx.font = "bold 30px system-ui, sans-serif";
+      ctx.fillText(cur.speaker === "A" ? "Speaker 1" : "Speaker 2", W / 2, H / 2 - 150);
+      ctx.fillStyle = "#ffffff";
+      ctx.font = "bold 54px system-ui, sans-serif";
+      const rows = wrap(ctx, cur.text, W - 100);
+      const y0 = H / 2 - ((rows.length - 1) * 33);
+      ctx.shadowColor = "rgba(0,0,0,.8)"; ctx.shadowBlur = 8;
+      rows.forEach((r, i) => ctx.fillText(r, W / 2, y0 + i * 66));
+      ctx.shadowBlur = 0;
+    }
+
+    ctx.fillStyle = "rgba(255,255,255,.3)";
+    ctx.fillRect(60, H - 120, W - 120, 8);
+    ctx.fillStyle = "#fde047";
+    ctx.fillRect(60, H - 120, (W - 120) * Math.min(t / total, 1), 8);
+
+    onStatus("Merekam... " + Math.round(Math.min(t / total, 1) * 100) + "%");
+    if (!audio.ended) requestAnimationFrame(frame);
+  }
+
+  rec.start(500);
+  await audio.play();
+  frame();
+  await new Promise(r => { audio.onended = r; });
+  await new Promise(r => setTimeout(r, 400));
+  rec.stop();
+  await done;
+  ac.close();
+
+  const type = rec.mimeType || "video/webm";
+  const blob = new Blob(chunks, { type });
+  return { url: URL.createObjectURL(blob), ext: type.includes("mp4") ? "mp4" : "webm" };
+}
+
 fetch("dialogs.json").then(r => r.json()).then(items => {
   const list = document.getElementById("list");
   list.textContent = "";
@@ -29,6 +145,7 @@ fetch("dialogs.json").then(r => r.json()).then(items => {
     const audio = document.createElement("audio");
     audio.controls = true;
     audio.src = d.audio;
+
     const btn = document.createElement("button");
     btn.textContent = "Show / hide transcript";
     const tr = document.createElement("div");
@@ -40,7 +157,46 @@ fetch("dialogs.json").then(r => r.json()).then(items => {
       tr.appendChild(p);
     });
     btn.onclick = () => tr.classList.toggle("hidden");
-    card.append(h, audio, btn, tr);
+
+    // ---- bagian video ----
+    const vb = document.createElement("div");
+    vb.className = "video-box";
+    const vh = document.createElement("strong");
+    vh.textContent = "Buat video Shorts";
+    const file = document.createElement("input");
+    file.type = "file"; file.accept = "image/*";
+    const title = document.createElement("input");
+    title.type = "text";
+    title.value = "Listening for Fluency | " + d.title;
+    const gen = document.createElement("button");
+    gen.textContent = "Generate video";
+    const status = document.createElement("small");
+    const result = document.createElement("div");
+
+    gen.onclick = async () => {
+      if (!file.files[0]) { status.textContent = "Pilih foto latar dulu."; return; }
+      gen.disabled = true; result.textContent = "";
+      try {
+        const out = await makeVideo(d, file.files[0], title.value, s => status.textContent = s);
+        status.textContent = "Selesai.";
+        const v = document.createElement("video");
+        v.src = out.url; v.controls = true;
+        const a = document.createElement("a");
+        a.className = "dl"; a.href = out.url;
+        a.download = d.audio.replace("audio/", "").replace(".mp3", "") + "." + out.ext;
+        a.textContent = "Download video (" + out.ext + ")";
+        result.append(v, a);
+      } catch (e) {
+        status.textContent = "Gagal: " + e.message;
+      }
+      gen.disabled = false;
+    };
+
+    const note = document.createElement("div");
+    note.innerHTML = "<small>Video direkam real-time, jadi durasinya sama dengan audio. Biarkan tab ini tetap terbuka selama proses.</small>";
+    vb.append(vh, document.createElement("br"), file, title, gen, document.createElement("br"), status, note, result);
+
+    card.append(h, audio, btn, tr, vb);
     list.appendChild(card);
   });
 }).catch(() => { document.getElementById("list").textContent = "No dialogs yet."; });
