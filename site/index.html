@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>English Listening</title>
+<style>
+  body { font-family: system-ui, sans-serif; max-width: 640px; margin: 0 auto; padding: 16px; background: #f6f7f9; color: #222; }
+  .card { background: #fff; border-radius: 12px; padding: 16px; margin-bottom: 16px; box-shadow: 0 1px 4px rgba(0,0,0,.08); }
+  audio { width: 100%; margin: 8px 0; }
+  button { padding: 6px 12px; border: 0; border-radius: 8px; background: #2563eb; color: #fff; cursor: pointer; }
+  .line { margin: 6px 0; }
+  .A { color: #be185d; } .B { color: #1d4ed8; }
+  .hidden { display: none; }
+</style>
+</head>
+<body>
+<h1>English Listening</h1>
+<div id="list">Loading...</div>
+<script>
+fetch("dialogs.json").then(r => r.json()).then(items => {
+  const list = document.getElementById("list");
+  list.textContent = "";
+  items.forEach(d => {
+    const card = document.createElement("div");
+    card.className = "card";
+    const h = document.createElement("h2");
+    h.textContent = d.title;
+    const audio = document.createElement("audio");
+    audio.controls = true;
+    audio.src = d.audio;
+    const btn = document.createElement("button");
+    btn.textContent = "Show / hide transcript";
+    const tr = document.createElement("div");
+    tr.className = "hidden";
+    d.lines.forEach(l => {
+      const p = document.createElement("div");
+      p.className = "line " + l.speaker;
+      p.textContent = l.speaker + ": " + l.text;
+      tr.appendChild(p);
+    });
+    btn.onclick = () => tr.classList.toggle("hidden");
+    card.append(h, audio, btn, tr);
+    list.appendChild(card);
+  });
+}).catch(() => { document.getElementById("list").textContent = "No dialogs yet."; });
+</script>
+</body>
+</html>
