@@ -1,0 +1,16 @@
+A: Hello. How can I help you today?
+B: Hi. I have a headache and a sore throat.
+A: I'm sorry to hear that. How long have you felt this way?
+B: Since yesterday morning.
+A: Do you have a fever?
+B: No, I don't think so.
+A: Okay. Do you have any allergies to medicine?
+B: No, I don't.
+A: Then I recommend these tablets for the headache.
+B: How often should I take them?
+A: Take one tablet every six hours, after eating.
+B: Got it. What about my throat?
+A: These lozenges can help. Use one when your throat hurts.
+B: Great. How much is everything?
+A: It's thirty five thousand rupiah in total.
+B: Here you go. Thank you for your help.
