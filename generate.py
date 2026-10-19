@@ -3,7 +3,7 @@ import asyncio, glob, json, os, subprocess, edge_tts
 VOICES = {"A": "en-US-JennyNeural", "B": "en-US-GuyNeural"}
 
 RATE = "-2%"          # kecepatan: 0% normal, -20% agak pelan, -35% sangat pelan
-PAUSE_SECONDS = 0.5    # jeda antar kalimat (detik)
+PAUSE_SECONDS = 0.2    # jeda antar kalimat (detik)
 VOLUME = "+0%"
 
 def make_silence(seconds):
