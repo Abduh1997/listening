@@ -35,8 +35,12 @@ jobs:
       - name: Install edge-tts
         run: pip install edge-tts
 
-      - name: Generate audio
+      - name: Generate podcast audio
         run: python generate.py
+
+      - name: Generate shadowing audio
+        continue-on-error: true
+        run: python generate_shadowing.py
 
       - name: Upload site
         uses: actions/upload-pages-artifact@v3
