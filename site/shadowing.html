@@ -33,6 +33,9 @@
     <option value="wide">YouTube panjang (landscape 16:9, 1280x720)</option>
   </select>
   <small>Berlaku untuk semua tombol Generate di bawah.</small>
+  <br><strong>Koreksi sinkron video (detik)</strong>
+  <input type="number" id="shift" value="0" step="0.05" min="-1" max="1">
+  <small>0 = normal. Kalau teks di video terasa terlambat dari suara, isi angka positif (misalnya 0.10). Kalau terlalu cepat, isi negatif.</small>
 </div>
 
 <div id="levels"></div>
@@ -156,8 +159,10 @@ const THEMES = [
   { accent: "#fcd34d", accent2: "#fb7185", c1: "#fb923c", c2: "#14b8a6", tint: "rgba(40,15,5,.6)" },
   { accent: "#a3e635", accent2: "#22d3ee", c1: "#e879f9", c2: "#0ea5e9", tint: "rgba(5,25,15,.62)" }
 ];
-const SKINS = ["#fcd9b6", "#f1c27d", "#e0ac69", "#c68642", "#8d5524"];
-const HAIRS = ["#3b2314", "#1f2937", "#92400e", "#b45309", "#111827", "#7c2d12"];
+const SKINS = ["#f7dcc4", "#f1cfae", "#e8bf96", "#deae82", "#cf9a6c"];
+const HAIRS = ["#0f1115", "#1a1a1f", "#2a1d16", "#3a2a1f", "#4b3626"];
+const HAIRSTYLES = ["quiff", "sidepart", "undercut", "crop", "curly"];
+const OUTFITS = ["suit", "shirt", "sweater", "hoodie"];
 
 function makeStyle(rnd) {
   const pick = a => a[Math.floor(rnd() * a.length)];
@@ -170,103 +175,243 @@ function makeStyle(rnd) {
     frame: pick(["none", "rounded", "corners"]),
     vignette: rnd() < 0.6,
     avatar: {
-      style: pick(["long", "bun", "curly", "short", "cap"]),
-      skin: pick(SKINS), hair: pick(HAIRS), color: theme.c1,
-      glasses: rnd() < 0.3, phones: rnd() < 0.5, phone: theme.accent
+      hairStyle: pick(HAIRSTYLES), hair: pick(HAIRS), skin: pick(SKINS),
+      outfit: pick(OUTFITS), color: pick([theme.c1, theme.c2, "#1f2937", "#334155"]),
+      tie: theme.accent, glasses: rnd() < 0.35, phones: rnd() < 0.4, phone: theme.accent,
+      stubble: rnd() < 0.4
     }
   };
 }
 
-// ---------- karakter tutor ----------
+// ---------- karakter tutor (laki-laki, acak) ----------
+function facePath(ctx, cx, cy, r) {
+  ctx.beginPath();
+  ctx.moveTo(cx - 0.86 * r, cy - 0.05 * r);
+  ctx.bezierCurveTo(cx - 0.92 * r, cy - 1.0 * r, cx + 0.92 * r, cy - 1.0 * r, cx + 0.86 * r, cy - 0.05 * r);
+  ctx.bezierCurveTo(cx + 0.86 * r, cy + 0.55 * r, cx + 0.5 * r, cy + 1.0 * r, cx, cy + 1.06 * r);
+  ctx.bezierCurveTo(cx - 0.5 * r, cy + 1.0 * r, cx - 0.86 * r, cy + 0.55 * r, cx - 0.86 * r, cy - 0.05 * r);
+  ctx.closePath();
+}
+
+function hairCap(ctx, cx, cy, r, lowFringe) {
+  const f = lowFringe ? 0.42 : 0.52;
+  ctx.beginPath();
+  ctx.moveTo(cx - 0.93 * r, cy - 0.02 * r);
+  ctx.bezierCurveTo(cx - 1.08 * r, cy - 1.2 * r, cx + 1.08 * r, cy - 1.2 * r, cx + 0.93 * r, cy - 0.02 * r);
+  ctx.lineTo(cx + 0.8 * r, cy - 0.38 * r);
+  ctx.quadraticCurveTo(cx, cy - f * r - 0.2 * r, cx - 0.8 * r, cy - 0.38 * r);
+  ctx.closePath();
+}
+
 function drawAvatar(ctx, cx, cy, r, av, mouth, blink, active, t) {
   ctx.save();
-  ctx.globalAlpha = active ? 1 : 0.75;
+  ctx.globalAlpha = active ? 1 : 0.8;
 
+  const hy = cy + (active ? Math.sin(t * 9) * 2.5 * mouth : Math.sin(t * 1.6) * 1.2);
+  const sy = cy + 1.1 * r;            // pangkal leher
+  const bottom = cy + 1.85 * r;       // batas bawah badan
+
+  // badan
   ctx.fillStyle = av.color;
   ctx.beginPath();
-  ctx.ellipse(cx, cy + r * 1.35, r * 1.05, r * 0.6, 0, Math.PI, 0);
+  ctx.moveTo(cx - 1.65 * r, bottom);
+  ctx.quadraticCurveTo(cx - 1.65 * r, sy + 0.12 * r, cx - 0.72 * r, sy);
+  ctx.lineTo(cx + 0.72 * r, sy);
+  ctx.quadraticCurveTo(cx + 1.65 * r, sy + 0.12 * r, cx + 1.65 * r, bottom);
+  ctx.closePath();
   ctx.fill();
 
-  const hy = cy + (active ? Math.sin(t * 9) * 3 * mouth : 0);
-
-  ctx.fillStyle = av.hair;
-  if (av.style === "long") {
-    ctx.beginPath();
-    ctx.ellipse(cx, hy + r * 0.2, r * 1.08, r * 1.12, 0, 0, Math.PI * 2);
-    ctx.fill();
-  }
-
+  // leher
   ctx.fillStyle = av.skin;
-  ctx.beginPath();
-  ctx.arc(cx, hy, r, 0, Math.PI * 2);
+  rr(ctx, cx - 0.27 * r, hy + 0.7 * r, 0.54 * r, sy - hy - 0.55 * r + 0.1 * r, 0.1 * r);
+  ctx.fill();
+  ctx.fillStyle = "rgba(0,0,0,.16)";
+  rr(ctx, cx - 0.27 * r, hy + 0.85 * r, 0.54 * r, 0.22 * r, 0.1 * r);
   ctx.fill();
 
+  // detail pakaian
+  if (av.outfit === "suit") {
+    ctx.fillStyle = "#f8fafc";
+    ctx.beginPath();
+    ctx.moveTo(cx - 0.36 * r, sy - 0.02 * r);
+    ctx.lineTo(cx + 0.36 * r, sy - 0.02 * r);
+    ctx.lineTo(cx, bottom - 0.02 * r);
+    ctx.closePath();
+    ctx.fill();
+    ctx.fillStyle = av.tie;
+    ctx.beginPath();
+    ctx.moveTo(cx - 0.09 * r, sy + 0.04 * r);
+    ctx.lineTo(cx + 0.09 * r, sy + 0.04 * r);
+    ctx.lineTo(cx + 0.13 * r, bottom - 0.12 * r);
+    ctx.lineTo(cx, bottom - 0.02 * r);
+    ctx.lineTo(cx - 0.13 * r, bottom - 0.12 * r);
+    ctx.closePath();
+    ctx.fill();
+    ctx.strokeStyle = "rgba(0,0,0,.35)";
+    ctx.lineWidth = Math.max(2, r * 0.03);
+    ctx.beginPath();
+    ctx.moveTo(cx - 0.36 * r, sy); ctx.lineTo(cx - 0.05 * r, bottom - 0.05 * r);
+    ctx.moveTo(cx + 0.36 * r, sy); ctx.lineTo(cx + 0.05 * r, bottom - 0.05 * r);
+    ctx.stroke();
+  } else if (av.outfit === "shirt") {
+    ctx.fillStyle = "#f8fafc";
+    ctx.beginPath();
+    ctx.moveTo(cx - 0.42 * r, sy - 0.04 * r);
+    ctx.lineTo(cx, sy + 0.34 * r);
+    ctx.lineTo(cx + 0.42 * r, sy - 0.04 * r);
+    ctx.lineTo(cx + 0.26 * r, sy + 0.1 * r);
+    ctx.lineTo(cx, sy + 0.08 * r);
+    ctx.lineTo(cx - 0.26 * r, sy + 0.1 * r);
+    ctx.closePath();
+    ctx.fill();
+    ctx.fillStyle = "rgba(255,255,255,.7)";
+    for (let i = 0; i < 2; i++) {
+      ctx.beginPath(); ctx.arc(cx, sy + (0.42 + i * 0.2) * r, r * 0.04, 0, Math.PI * 2); ctx.fill();
+    }
+  } else if (av.outfit === "sweater") {
+    ctx.strokeStyle = "rgba(0,0,0,.28)";
+    ctx.lineWidth = r * 0.14;
+    ctx.beginPath(); ctx.arc(cx, sy - 0.05 * r, 0.42 * r, 0.05 * Math.PI, 0.95 * Math.PI); ctx.stroke();
+  } else {
+    ctx.fillStyle = "rgba(0,0,0,.25)";
+    ctx.beginPath(); ctx.ellipse(cx, sy + 0.02 * r, 0.6 * r, 0.22 * r, 0, 0, Math.PI); ctx.fill();
+    ctx.strokeStyle = "rgba(255,255,255,.75)";
+    ctx.lineWidth = Math.max(2, r * 0.035);
+    ctx.beginPath();
+    ctx.moveTo(cx - 0.2 * r, sy + 0.2 * r); ctx.lineTo(cx - 0.2 * r, sy + 0.62 * r);
+    ctx.moveTo(cx + 0.2 * r, sy + 0.2 * r); ctx.lineTo(cx + 0.2 * r, sy + 0.62 * r);
+    ctx.stroke();
+  }
+
+  // telinga
+  ctx.fillStyle = av.skin;
+  ctx.beginPath(); ctx.arc(cx - 0.88 * r, hy + 0.1 * r, 0.16 * r, 0, Math.PI * 2); ctx.fill();
+  ctx.beginPath(); ctx.arc(cx + 0.88 * r, hy + 0.1 * r, 0.16 * r, 0, Math.PI * 2); ctx.fill();
+
+  // wajah (rahang tegas)
+  ctx.fillStyle = av.skin;
+  facePath(ctx, cx, hy, r);
+  ctx.fill();
+
+  // bayangan rahang dan janggut tipis
+  ctx.save();
+  facePath(ctx, cx, hy, r);
+  ctx.clip();
+  const g = ctx.createLinearGradient(0, hy + 0.1 * r, 0, hy + 1.06 * r);
+  g.addColorStop(0, "rgba(0,0,0,0)");
+  g.addColorStop(1, av.stubble ? "rgba(30,25,25,.20)" : "rgba(90,50,30,.07)");
+  ctx.fillStyle = g;
+  ctx.fillRect(cx - r, hy + 0.1 * r, 2 * r, 1.0 * r);
+  ctx.restore();
+
+  // rambut
   ctx.fillStyle = av.hair;
-  if (av.style !== "cap") {
+  const hs = av.hairStyle;
+  hairCap(ctx, cx, hy, r, hs === "crop" || hs === "curly");
+  ctx.fill();
+  if (hs === "quiff") {
     ctx.beginPath();
-    ctx.moveTo(cx - r, hy - r * 0.1);
-    ctx.arc(cx, hy, r, Math.PI * 1.02, Math.PI * 1.98);
-    ctx.lineTo(cx + r, hy - r * 0.1);
-    ctx.quadraticCurveTo(cx, hy - r * 0.55, cx - r, hy - r * 0.1);
+    ctx.ellipse(cx + 0.1 * r, hy - 0.86 * r, 0.66 * r, 0.27 * r, -0.12, 0, Math.PI * 2);
     ctx.fill();
-  }
-  if (av.style === "bun") {
+    ctx.fillStyle = "rgba(255,255,255,.16)";
     ctx.beginPath();
-    ctx.arc(cx, hy - r * 1.05, r * 0.3, 0, Math.PI * 2);
+    ctx.ellipse(cx + 0.2 * r, hy - 0.9 * r, 0.3 * r, 0.08 * r, -0.12, 0, Math.PI * 2);
     ctx.fill();
-  }
-  if (av.style === "curly") {
-    for (let i = 0; i < 7; i++) {
-      const a = Math.PI * (1.05 + i * 0.15);
+  } else if (hs === "sidepart") {
+    ctx.strokeStyle = "rgba(255,255,255,.22)";
+    ctx.lineWidth = Math.max(2, r * 0.035);
+    ctx.beginPath();
+    ctx.moveTo(cx - 0.32 * r, hy - 1.0 * r);
+    ctx.quadraticCurveTo(cx - 0.42 * r, hy - 0.75 * r, cx - 0.5 * r, hy - 0.5 * r);
+    ctx.stroke();
+  } else if (hs === "undercut") {
+    ctx.fillStyle = "rgba(0,0,0,.28)";
+    ctx.fillRect(cx - 0.93 * r, hy - 0.3 * r, 0.22 * r, 0.3 * r);
+    ctx.fillRect(cx + 0.71 * r, hy - 0.3 * r, 0.22 * r, 0.3 * r);
+    ctx.fillStyle = av.hair;
+    ctx.beginPath();
+    ctx.ellipse(cx, hy - 0.86 * r, 0.64 * r, 0.26 * r, 0, 0, Math.PI * 2);
+    ctx.fill();
+  } else if (hs === "curly") {
+    for (let i = 0; i < 8; i++) {
+      const a = Math.PI * (1.08 + i * 0.12);
       ctx.beginPath();
-      ctx.arc(cx + Math.cos(a) * r * 0.95, hy + Math.sin(a) * r * 0.95, r * 0.28, 0, Math.PI * 2);
+      ctx.arc(cx + Math.cos(a) * 0.9 * r, hy + Math.sin(a) * 0.95 * r, 0.2 * r, 0, Math.PI * 2);
       ctx.fill();
     }
   }
-  if (av.style === "cap") {
-    ctx.fillStyle = av.color;
-    ctx.beginPath();
-    ctx.arc(cx, hy - r * 0.05, r * 1.02, Math.PI, 0);
-    ctx.closePath();
-    ctx.fill();
-    ctx.beginPath();
-    ctx.ellipse(cx + r * 0.55, hy - r * 0.05, r * 0.6, r * 0.12, 0, 0, Math.PI * 2);
-    ctx.fill();
-  }
 
-  ctx.fillStyle = "#111827";
-  const ey = hy + r * 0.05;
-  const eh = Math.max(1.5, r * 0.09 * (1 - blink));
-  ctx.beginPath(); ctx.ellipse(cx - r * 0.36, ey, r * 0.09, eh, 0, 0, Math.PI * 2); ctx.fill();
-  ctx.beginPath(); ctx.ellipse(cx + r * 0.36, ey, r * 0.09, eh, 0, 0, Math.PI * 2); ctx.fill();
-
-  if (av.glasses) {
-    ctx.strokeStyle = "#111827";
-    ctx.lineWidth = 4;
-    ctx.beginPath(); ctx.arc(cx - r * 0.36, ey, r * 0.22, 0, Math.PI * 2); ctx.stroke();
-    ctx.beginPath(); ctx.arc(cx + r * 0.36, ey, r * 0.22, 0, Math.PI * 2); ctx.stroke();
-    ctx.beginPath(); ctx.moveTo(cx - r * 0.14, ey); ctx.lineTo(cx + r * 0.14, ey); ctx.stroke();
-  }
-
-  ctx.fillStyle = "rgba(244,114,182,.35)";
-  ctx.beginPath(); ctx.arc(cx - r * 0.55, hy + r * 0.3, r * 0.14, 0, Math.PI * 2); ctx.fill();
-  ctx.beginPath(); ctx.arc(cx + r * 0.55, hy + r * 0.3, r * 0.14, 0, Math.PI * 2); ctx.fill();
-
-  ctx.fillStyle = "#7f1d1d";
+  // alis tebal
+  const lift = active ? mouth * r * 0.03 : 0;
+  ctx.strokeStyle = av.hair;
+  ctx.lineWidth = Math.max(3, r * 0.1);
+  ctx.lineCap = "round";
   ctx.beginPath();
-  ctx.ellipse(cx, hy + r * 0.48, r * 0.2 + mouth * r * 0.06,
-              r * 0.04 + mouth * r * 0.2, 0, 0, Math.PI * 2);
-  ctx.fill();
+  ctx.moveTo(cx - 0.6 * r, hy - 0.2 * r - lift); ctx.lineTo(cx - 0.17 * r, hy - 0.27 * r - lift);
+  ctx.moveTo(cx + 0.17 * r, hy - 0.27 * r - lift); ctx.lineTo(cx + 0.6 * r, hy - 0.2 * r - lift);
+  ctx.stroke();
 
+  // mata (sipit dan tajam)
+  const ey = hy + 0.0 * r;
+  const eh = Math.max(1.4, r * 0.07 * (1 - blink));
+  ctx.fillStyle = "#12141a";
+  ctx.beginPath(); ctx.ellipse(cx - 0.36 * r, ey, r * 0.16, eh, 0, 0, Math.PI * 2); ctx.fill();
+  ctx.beginPath(); ctx.ellipse(cx + 0.36 * r, ey, r * 0.16, eh, 0, 0, Math.PI * 2); ctx.fill();
+  if (!blink) {
+    ctx.fillStyle = "rgba(255,255,255,.85)";
+    ctx.beginPath(); ctx.arc(cx - 0.32 * r, ey - 0.012 * r, r * 0.018, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.arc(cx + 0.4 * r, ey - 0.012 * r, r * 0.018, 0, Math.PI * 2); ctx.fill();
+  }
+  ctx.strokeStyle = "rgba(15,15,20,.7)";
+  ctx.lineWidth = Math.max(2, r * 0.03);
+  ctx.beginPath();
+  ctx.moveTo(cx - 0.52 * r, ey - 0.04 * r); ctx.quadraticCurveTo(cx - 0.36 * r, ey - 0.1 * r, cx - 0.2 * r, ey - 0.03 * r);
+  ctx.moveTo(cx + 0.2 * r, ey - 0.03 * r); ctx.quadraticCurveTo(cx + 0.36 * r, ey - 0.1 * r, cx + 0.52 * r, ey - 0.04 * r);
+  ctx.stroke();
+
+  // kacamata
+  if (av.glasses) {
+    ctx.strokeStyle = "#0f172a";
+    ctx.lineWidth = Math.max(3, r * 0.05);
+    rr(ctx, cx - 0.64 * r, ey - 0.15 * r, 0.56 * r, 0.32 * r, 0.08 * r); ctx.stroke();
+    rr(ctx, cx + 0.08 * r, ey - 0.15 * r, 0.56 * r, 0.32 * r, 0.08 * r); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(cx - 0.08 * r, ey - 0.02 * r); ctx.lineTo(cx + 0.08 * r, ey - 0.02 * r); ctx.stroke();
+  }
+
+  // hidung
+  ctx.strokeStyle = "rgba(90,50,30,.35)";
+  ctx.lineWidth = Math.max(2, r * 0.035);
+  ctx.beginPath();
+  ctx.moveTo(cx + 0.03 * r, hy + 0.1 * r);
+  ctx.quadraticCurveTo(cx + 0.1 * r, hy + 0.36 * r, cx - 0.02 * r, hy + 0.4 * r);
+  ctx.stroke();
+
+  // mulut: senyum tipis saat diam, terbuka saat bicara
+  const my = hy + 0.62 * r;
+  if (mouth > 0.12) {
+    const w = r * (0.15 + mouth * 0.05), h = r * (0.03 + mouth * 0.12);
+    ctx.fillStyle = "#4a1717";
+    ctx.beginPath(); ctx.ellipse(cx, my, w, h, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = "rgba(255,255,255,.92)";
+    ctx.fillRect(cx - w * 0.72, my - h * 0.92, w * 1.44, Math.min(h * 0.55, r * 0.07));
+  } else {
+    ctx.strokeStyle = "#8a4538";
+    ctx.lineWidth = Math.max(3, r * 0.05);
+    ctx.beginPath();
+    ctx.arc(cx, my - 0.1 * r, 0.22 * r, 0.18 * Math.PI, 0.82 * Math.PI);
+    ctx.stroke();
+  }
+
+  // headphone
   if (av.phones) {
     ctx.strokeStyle = av.phone;
     ctx.lineWidth = r * 0.12;
     ctx.beginPath();
-    ctx.arc(cx, hy, r * 1.1, Math.PI * 1.03, Math.PI * 1.97);
+    ctx.arc(cx, hy - 0.02 * r, r * 1.12, Math.PI * 1.04, Math.PI * 1.96);
     ctx.stroke();
     ctx.fillStyle = av.phone;
-    ctx.beginPath(); ctx.ellipse(cx - r * 1.1, hy + r * 0.05, r * 0.16, r * 0.3, 0, 0, Math.PI * 2); ctx.fill();
-    ctx.beginPath(); ctx.ellipse(cx + r * 1.1, hy + r * 0.05, r * 0.16, r * 0.3, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(cx - 1.1 * r, hy + 0.08 * r, r * 0.16, r * 0.3, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(cx + 1.1 * r, hy + 0.08 * r, r * 0.16, r * 0.3, 0, 0, Math.PI * 2); ctx.fill();
   }
   ctx.restore();
 }
@@ -343,7 +488,7 @@ function drawParticles(ctx, st, parts, t) {
 
 // ---------- pembuat video ----------
 async function makeVideo(job) {
-  const { d, file, title, onStatus, previewBox, ac, fmt } = job;
+  const { d, file, title, onStatus, previewBox, ac, fmt, hideHeader, shift } = job;
   const F = FORMATS[fmt];
   W = F.w; H = F.h;
   _fitCache.clear();
@@ -423,19 +568,20 @@ async function makeVideo(job) {
     // latar + gerakan kamera
     const prog = Math.min(t / total, 1);
     let z = 1, ox = 0;
-    if (st.cam === "zoomin") z = 1 + 0.1 * prog;
-    else if (st.cam === "zoomout") z = 1.1 - 0.1 * prog;
-    else if (st.cam === "panleft") { z = 1.08; ox = 25 - 50 * prog; }
-    else { z = 1.08; ox = -25 + 50 * prog; }
+    const camMode = hideHeader ? "static" : st.cam;
+    if (camMode === "zoomin") z = 1 + 0.1 * prog;
+    else if (camMode === "zoomout") z = 1.1 - 0.1 * prog;
+    else if (camMode === "panleft") { z = 1.08; ox = 25 - 50 * prog; }
+    else if (camMode === "panright") { z = 1.08; ox = -25 + 50 * prog; }
     ctx.save();
     ctx.translate(W / 2 + ox, H / 2);
     ctx.scale(z, z);
     ctx.drawImage(bg, -W / 2, -H / 2);
     ctx.restore();
 
-    ctx.fillStyle = st.theme.tint;
+    ctx.fillStyle = hideHeader ? "rgba(0,0,0,.22)" : st.theme.tint;
     ctx.fillRect(0, 0, W, H);
-    if (st.vignette) { ctx.fillStyle = vig; ctx.fillRect(0, 0, W, H); }
+    if (st.vignette && !hideHeader) { ctx.fillStyle = vig; ctx.fillRect(0, 0, W, H); }
 
     drawParticles(ctx, st, parts, t);
 
@@ -460,13 +606,15 @@ async function makeVideo(job) {
 
     ctx.textAlign = "center";
 
-    // judul + level
-    ctx.fillStyle = st.theme.accent;
-    ctx.font = "bold " + L.titleFont + "px system-ui, sans-serif";
-    titleRows.forEach((r, i) => ctx.fillText(r, W / 2, L.titleY + i * L.titleLH));
-    ctx.fillStyle = "rgba(255,255,255,.85)";
-    ctx.font = "bold " + L.badgeFont + "px system-ui, sans-serif";
-    ctx.fillText(levelText, W / 2, L.badgeY + (titleRows.length - 1) * L.titleLH);
+    // judul + level (disembunyikan kalau gambar latar sudah punya tulisan di atas)
+    if (!hideHeader) {
+      ctx.fillStyle = st.theme.accent;
+      ctx.font = "bold " + L.titleFont + "px system-ui, sans-serif";
+      titleRows.forEach((r, i) => ctx.fillText(r, W / 2, L.titleY + i * L.titleLH));
+      ctx.fillStyle = "rgba(255,255,255,.85)";
+      ctx.font = "bold " + L.badgeFont + "px system-ui, sans-serif";
+      ctx.fillText(levelText, W / 2, L.badgeY + (titleRows.length - 1) * L.titleLH);
+    }
 
     // tutor dan penonton
     const blink = (t % 3.2) < 0.15 ? 1 : 0;
@@ -595,7 +743,7 @@ async function makeVideo(job) {
 
   await new Promise(resolve => {
     const timer = setInterval(() => {
-      const t = Math.max(0, ac.currentTime - t0);
+      const t = Math.max(0, ac.currentTime - t0 + shift);
       draw(t);
       onStatus("Merekam... " + fmtTime(t) + " / " + fmtTime(total) + " (" +
                Math.round(Math.min(t / total, 1) * 100) + "%). Jangan pindah tab, layar tetap menyala.");
@@ -627,7 +775,7 @@ function setButtons(disabled) {
   document.querySelectorAll("button.gen").forEach(b => { b.disabled = disabled; });
 }
 
-async function runJob(d, file, title, statusEl, box) {
+async function runJob(d, file, title, statusEl, box, hideHeader) {
   if (busy) { statusEl.textContent = "Masih ada proses lain yang berjalan."; return; }
 
   // WAJIB paling awal (sebelum await), supaya HP mengizinkan audio
@@ -644,7 +792,8 @@ async function runJob(d, file, title, statusEl, box) {
   const fmt = fmtSel.value;
   try {
     const out = await makeVideo({
-      d, file, title, ac, fmt, previewBox: box,
+      d, file, title, ac, fmt, hideHeader, previewBox: box,
+      shift: parseFloat(document.getElementById("shift").value) || 0,
       onStatus: s => { statusEl.textContent = s; }
     });
     statusEl.textContent = "Selesai. Ukuran: " + (out.size / 1048576).toFixed(1) + " MB. Gaya: " + out.info +
@@ -671,7 +820,7 @@ async function runJob(d, file, title, statusEl, box) {
 }
 
 // ---------- halaman ----------
-fetch("shadowing.json").then(r => r.json()).then(sets => {
+fetch("shadowing.json?v=" + Date.now()).then(r => r.json()).then(sets => {
   const list = document.getElementById("list");
   const levelsBox = document.getElementById("levels");
   list.textContent = "";
@@ -742,6 +891,13 @@ fetch("shadowing.json").then(r => r.json()).then(sets => {
     title.type = "text";
     title.value = "Shadowing Practice | " + d.title;
 
+    const hideLab = document.createElement("label");
+    hideLab.style.cssText = "display:block;margin:6px 0;font-size:14px;";
+    const hideCb = document.createElement("input");
+    hideCb.type = "checkbox";
+    hideCb.checked = true;
+    hideLab.append(hideCb, " Gambar latar sudah ada tulisan di atas (sembunyikan judul dan level dari aplikasi, tanpa gerakan kamera)");
+
     const gen = document.createElement("button");
     gen.className = "gen";
     gen.textContent = "Generate video";
@@ -749,12 +905,12 @@ fetch("shadowing.json").then(r => r.json()).then(sets => {
     const status = document.createElement("small");
     const result = document.createElement("div");
 
-    gen.onclick = () => { runJob(d, file.files[0], title.value, status, result); };
+    gen.onclick = () => { runJob(d, file.files[0], title.value, status, result, hideCb.checked); };
 
     const note = document.createElement("div");
     note.innerHTML = "<small>Video direkam real-time, jadi lama proses sama dengan durasi video. Biarkan tab tetap terbuka dan layar menyala.</small>";
 
-    vb.append(vh, document.createElement("br"), file, title, gen,
+    vb.append(vh, document.createElement("br"), file, title, hideLab, gen,
               document.createElement("br"), status, note, result);
 
     card.append(h, info, audio, btn, tr, vb);
