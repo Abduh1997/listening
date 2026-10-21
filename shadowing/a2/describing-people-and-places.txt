@@ -1,0 +1,34 @@
+# SHADOWING A2 - Describing People and Places
+# Simpan di folder: shadowing/a2/describing-people-and-places.txt
+# Satu kalimat per baris. Baris yang diawali tanda # diabaikan.
+
+What does your friend look like?
+He is tall and thin with short black hair.
+She has big brown eyes and a kind smile.
+My sister is taller than me.
+My brother is the funniest person I know.
+What is she like?
+She is friendly and very hardworking.
+He is a little shy, but he is very polite.
+They are both quiet people.
+My new neighbor is older than my father.
+Tell me about your hometown.
+It's a small town near the mountains.
+It's quieter than the city.
+The air is cleaner and the people are friendlier.
+There aren't many shops, but there is a big market.
+The market is the busiest place in town.
+My house is bigger than my old apartment.
+It's not far from the beach.
+Which is better, the city or the countryside?
+I prefer the countryside because it's more relaxing.
+Living in the city is more expensive.
+The traffic here is worse than in my town.
+This is the most beautiful place I've ever seen.
+The hotel was cheap, but it was very clean.
+The food in this restaurant is better than the food at home.
+Which one is more comfortable?
+The red sofa is more comfortable than the blue one.
+It's the oldest building in the city.
+Everyone is so friendly here.
+I'd like to live here one day.

@@ -1,0 +1,34 @@
+# SHADOWING A2 - Health and Feelings
+# Simpan di folder: shadowing/a2/health-and-feelings.txt
+# Satu kalimat per baris. Baris yang diawali tanda # diabaikan.
+
+What's the matter?
+I don't feel well today.
+I have a headache.
+My throat hurts when I swallow.
+I think I have a cold.
+Do you have a fever?
+Yes, my temperature is high.
+You should go to the doctor.
+You should drink a lot of water.
+You shouldn't go to work today.
+I'd like to make an appointment, please.
+The doctor can see you at three o'clock.
+How long have you felt like this?
+Since yesterday afternoon.
+Take this medicine twice a day.
+Take it after meals.
+Do you have any allergies?
+No, I don't have any allergies.
+Get some rest and you'll feel better soon.
+I'm feeling much better today.
+I felt really nervous before the exam.
+She was very happy with the news.
+He looks worried. Is he okay?
+I'm angry because he was late again.
+Don't worry. Everything will be fine.
+I'm so excited about the trip!
+I feel sad when I miss my family.
+I try to exercise three times a week.
+I need to eat healthier food.
+Take care of yourself!

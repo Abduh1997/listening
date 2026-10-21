@@ -1,0 +1,34 @@
+# SHADOWING A2 - Work and Study
+# Simpan di folder: shadowing/a2/work-and-study.txt
+# Satu kalimat per baris. Baris yang diawali tanda # diabaikan.
+
+What do you study at university?
+I study mechanical engineering.
+I'm in my last year.
+I have a lot of homework this week.
+I have to finish my report by Friday.
+Our class starts at eight and ends at noon.
+The teacher gave us a difficult test.
+I studied all night, but I'm still nervous.
+Can I borrow your notes, please?
+Sure, I'll send them to you later.
+Let's study together in the library.
+Where do you work?
+I work in a small company near the station.
+I've worked there for three years.
+My job is busy, but I enjoy it.
+I usually work from nine to five.
+Sometimes I have to work late.
+I have a meeting with my manager at ten.
+Could you send me the document, please?
+I'll check my email and reply soon.
+We need to finish this project before the deadline.
+I'm sorry, I can't come to the office today.
+Could I take a day off next Monday?
+She is good at solving problems.
+He is learning how to write code.
+I'm looking for a part-time job.
+I have an interview tomorrow morning.
+I'm proud of my team.
+I want to improve my English at work.
+Practice makes perfect.
