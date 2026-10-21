@@ -1,0 +1,34 @@
+# SHADOWING A1 - Eating Out
+# Simpan di folder: shadowing/a1/eating-out.txt
+# Satu kalimat per baris. Baris yang diawali tanda # diabaikan.
+
+A table for two, please.
+Can we sit by the window?
+Here is the menu.
+I'm hungry.
+I'm thirsty.
+What would you like to drink?
+I'd like a glass of water, please.
+Can I have a cup of tea?
+Are you ready to order?
+Yes, I'd like the chicken and rice.
+What do you recommend?
+The fish is very good today.
+Do you have any vegetarian food?
+I don't eat meat.
+Is it spicy?
+Not too spicy, please.
+I'll have the soup.
+Would you like some bread?
+No, thank you.
+Enjoy your meal!
+This is delicious!
+The food is very hot.
+Can I have some more water?
+Excuse me, can I have the bill?
+How much is the total?
+Do you accept cards?
+Sorry, cash only.
+Here you are.
+Keep the change.
+Thank you, have a nice day!

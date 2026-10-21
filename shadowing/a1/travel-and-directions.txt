@@ -1,0 +1,34 @@
+# SHADOWING A1 - Travel and Directions
+# Simpan di folder: shadowing/a1/travel-and-directions.txt
+# Satu kalimat per baris. Baris yang diawali tanda # diabaikan.
+
+Excuse me, I'm lost.
+Where is the bus stop?
+Is it far from here?
+No, it's five minutes on foot.
+Turn right at the traffic light.
+It's next to the bank.
+It's across from the park.
+Go straight for two blocks.
+Can you show me on the map?
+Which bus goes to the airport?
+Bus number ten goes there.
+How long does it take?
+It takes about twenty minutes.
+Where can I buy a ticket?
+One ticket to the city center, please.
+Is this seat free?
+What time does the train leave?
+It leaves at nine fifteen.
+Is this the right platform?
+Which stop is this?
+The next stop is mine.
+I'd like a taxi, please.
+Please take me to this hotel.
+How much is the fare?
+Stop here, please.
+I have a reservation.
+Here is my passport.
+Where is the bathroom?
+Is there a hotel near here?
+Thank you for your help!

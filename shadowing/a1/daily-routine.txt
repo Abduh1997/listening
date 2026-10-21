@@ -1,0 +1,34 @@
+# SHADOWING A1 - Daily Routine
+# Simpan di folder: shadowing/a1/daily-routine.txt
+# Satu kalimat per baris. Baris yang diawali tanda # diabaikan.
+
+I get up early every day.
+I brush my teeth.
+I take a shower.
+I get dressed.
+I have breakfast at seven.
+I drink coffee in the morning.
+I go to work by bus.
+I start work at eight o'clock.
+What time do you start work?
+I have lunch at noon.
+I eat lunch with my friends.
+I finish work at five.
+I go home at six.
+I'm tired after work.
+I cook dinner at home.
+We eat dinner at seven thirty.
+After dinner, I watch TV.
+I read a book before bed.
+I go to bed at ten o'clock.
+What do you do on weekends?
+I clean the house on Saturday.
+I visit my family on Sunday.
+I like to go for a walk.
+I play football with my friends.
+Do you like music?
+Yes, I listen to music every day.
+I study English every evening.
+I'm busy today.
+I'm free tomorrow.
+Have a nice weekend!

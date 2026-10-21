@@ -1,0 +1,34 @@
+# SHADOWING A1 - Family and Home
+# Simpan di folder: shadowing/a1/family-and-home.txt
+# Satu kalimat per baris. Baris yang diawali tanda # diabaikan.
+
+This is my family.
+This is my mother.
+This is my father.
+She is my sister.
+He is my brother.
+I have two children.
+My grandmother is seventy years old.
+My family is not big.
+We live in a nice house.
+My house has three rooms.
+This is the living room.
+The kitchen is very clean.
+My bedroom is small.
+There is a bed and a desk.
+The bathroom is next to the kitchen.
+We have a small garden.
+Dinner is ready!
+Please wash your hands.
+Let's eat together.
+Can you help me, please?
+I'm cooking dinner.
+He is watching TV.
+She is reading a book.
+The children are playing outside.
+Turn off the light, please.
+Open the window, please.
+Close the door, please.
+I'm tired.
+Good night, sleep well.
+I love my family.

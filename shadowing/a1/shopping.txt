@@ -1,0 +1,34 @@
+# SHADOWING A1 - Shopping
+# Simpan di folder: shadowing/a1/shopping.txt
+# Satu kalimat per baris. Baris yang diawali tanda # diabaikan.
+
+Can I help you?
+I'm just looking, thank you.
+Do you have this in blue?
+What size do you wear?
+I wear size medium.
+Can I try it on?
+Where is the fitting room?
+It's too big.
+It's too small.
+Do you have a bigger size?
+Do you have a smaller size?
+It looks good on you.
+I like this one.
+How much is this shirt?
+It's fifteen dollars.
+That's too expensive.
+Do you have a cheaper one?
+Is there a discount?
+It's on sale today.
+I'll take it.
+I'd like two apples, please.
+Where can I find the milk?
+Is this fresh?
+Do you have a bag?
+Can I pay by card?
+Cash or card?
+Here is your change.
+Do you need a receipt?
+Yes, please.
+Thank you, goodbye!
