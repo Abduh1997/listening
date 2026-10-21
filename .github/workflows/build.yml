@@ -10,9 +10,12 @@ permissions:
   pages: write
   id-token: write
 
+# Antrean: proses yang sedang berjalan TIDAK dibatalkan oleh upload baru.
+# Upload berikutnya menunggu giliran. Kalau ada beberapa yang menunggu,
+# yang terbaru dipakai (isinya sudah mencakup semua file sebelumnya).
 concurrency:
   group: pages
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 jobs:
   deploy:
@@ -29,11 +32,35 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: Install ffmpeg
-        run: sudo apt-get update && sudo apt-get install -y ffmpeg
+      # Cache berisi suara yang sudah pernah dibuat, supaya tidak dibuat ulang.
+      - name: Restore audio cache
+        uses: actions/cache/restore@v4
+        with:
+          path: .cache
+          key: tts-cache-${{ github.run_id }}
+          restore-keys: |
+            tts-cache-
 
-      - name: Install edge-tts
-        run: pip install edge-tts
+      # Cek cepat: adakah dialog atau shadowing baru/berubah?
+      - name: Check what needs to be generated
+        id: plan
+        run: |
+          need_podcast=$(python generate.py --check)
+          need_shadowing=$(python generate_shadowing.py --check)
+          echo "podcast: $need_podcast, shadowing: $need_shadowing"
+          if [ "$need_podcast" = "true" ] || [ "$need_shadowing" = "true" ]; then
+            echo "needed=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "needed=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      # ffmpeg dan edge-tts hanya dipasang kalau memang ada yang perlu dibuat.
+      - name: Install ffmpeg and edge-tts
+        if: steps.plan.outputs.needed == 'true'
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq --no-install-recommends ffmpeg
+          pip install edge-tts
 
       - name: Generate podcast audio
         run: python generate.py
@@ -41,6 +68,14 @@ jobs:
       - name: Generate shadowing audio
         continue-on-error: true
         run: python generate_shadowing.py
+
+      # Simpan cache hanya kalau ada yang baru dibuat (tetap disimpan walau ada error).
+      - name: Save audio cache
+        if: always() && steps.plan.outputs.needed == 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: .cache
+          key: tts-cache-${{ github.run_id }}
 
       - name: Upload site
         uses: actions/upload-pages-artifact@v3
